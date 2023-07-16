@@ -291,11 +291,9 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 // initial the forces
 const update = new Update(
     4.6,
-    40,
     680,
     76,
     35,
-    20,
     40
 );
 
@@ -346,12 +344,12 @@ const tick = () => {
             if(currentTime < starterSystem.endTime && starterSystem.rotorVelocity == starterSystem.finalRotorSpeed !== 0){
                 starterSystem.rotorVelocity += starterSystem.starterTorque / starterSystem.rotorInertia * (currentTime - starterSystem.startTime) / 1000;
                 // update to the new velocity every where
-                update.rotorVelocity = starterSystem.rotorVelocity * 5.13;
-                update.forces.rotorVilocity = starterSystem.rotorVelocity * 5.13;
-                update.forces.W = update.forces.rotorVilocity / update.r;
-                console.log(starterSystem.rotorVelocity); // ~ 705
-                console.log(update.rotorVelocity);  // ~ 3620
-                console.log(update.forces.rotorVilocity); // ~ 3620
+                update.rotorVelocity = starterSystem.rotorVelocity;
+                update.forces.rotorVilocity = starterSystem.rotorVelocity;
+                update.W = update.forces.rotorVilocity / update.r;
+                console.log(starterSystem.rotorVelocity);
+                console.log(update.rotorVelocity);
+                console.log(update.forces.rotorVilocity);
             }
             // when reaches the desired rotor velocity then mark the helicopter as lusnhed and reset the otherS
             else{
@@ -365,17 +363,14 @@ const tick = () => {
             // update the rotor f,a,w,v after re-calculating the total forces which effect the rotor
             update.rotor_update();
             // update the 
-            update.update();
+            update.update_on_fly();
             
-            
-            console.log('rotor forces from main');
-            console.log(update.rotorTotalForces);
             heli.position.x = update.position.getX();
             heli.position.y = update.position.getY();
             heli.position.z = update.position.getZ();
             
-            camera.position.x = update.position.getX() + 500;
-            camera.position.y = update.position.getY() + 1200;
+            camera.position.x = update.position.getX() + 1500;
+            camera.position.y = update.position.getY() + 1500;
             camera.position.z = update.position.getZ();
             camera.lookAt(heli.position.x, heli.position.y, heli.position.z);
             

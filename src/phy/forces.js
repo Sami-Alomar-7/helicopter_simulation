@@ -4,41 +4,35 @@ class Forces{
     constructor(
         update,
         r,
-        spinnerSpace,
         heliMass,
         fualMass,
         CL,
         CD,
-        temperature, 
-        airPressure,
-        windSpeed,
-        Ashape
+        temperature,
+        windSpeed
     ) {
         this.totalForces = vector.create(0, 0, 0);
         this.position = vector.create(0, 0, 0);
-        this.spinnerSpace = spinnerSpace;
-        this.W = 0;
         this.r = r;
         this.rotorVilocity = 0;
         this.CL = CL;
         this.CD = CD;
         this.temperature = temperature;
-        this.airPressure = airPressure;
         this.totalForces = vector.create(0, 0, 0);
         this.gravityForce = vector.create(0, 0, 0);
         this.testForce = vector.create(0, 0, 0);
-        this.moveForce = vector.create(0, 0, 0);
+        this.moveForce = 0;
         this.leftForce = vector.create(0, 0, 0);
         this.thrustForce = vector.create(0, 0, 0);
-        this.parasiteDrag = vector.create(0, 0, 0);
+        this.DragForce = vector.create(0, 0, 0);
+        this.rotorTotalForces = 0;
         this.rotorDragForce = 0;
-        this.rotorParasiteDrag = 0;
         this.rotorMoveForce = 0;
         this.windSpeed = windSpeed;
         this.fualMass = fualMass;
+        this.rotorMass = 14;
         this.heliMass = heliMass;
-        this.rotoeMass = 14;
-        this.totalMass = heliMass + fualMass + this.rotoeMass;
+        this.totalMass = heliMass + fualMass + this.rotorMass;
         this.massFlowRate = 2030;
         this.gravity = 0;
         this.latitudInRadians = 0.71;
@@ -47,10 +41,9 @@ class Forces{
             b : 6356752.314245
         }
         this.GM = 3.986004418 * Math.pow(10,14);
-        this.Ashape = Ashape;
-        this.forwardBackAngele = 0;
-        this.leftRightAngel = 0;
+        this.Ashape = 46.2;
         this.rotorAshape = 1.7;
+        this.P = 1.225;
         this.update = update;
     }
 
@@ -78,74 +71,68 @@ class Forces{
     }
 
 // Move
-    move_force() {
-        // calculate the moving force 
-        this.moveForce = 0.5 * this.CL * this.rotorVilocity * this.rotorVilocity * this.spinnerSpace;
+    rotor_move_force() {
+        // calculate the moving force for rotor
+        this.rotorMoveForce = 0.5 * this.CL * this.rotorVilocity * this.rotorVilocity * this.rotorAshape * this.P;
     }
 
 // Left
     left_force() {
-        this.leftForce = vector.create(0, this.moveForce * Math.cos(this.forwardBackAngele), 0);
+        this.leftForce = vector.create(0, this.rotorMoveForce * Math.cos(this.forwardBackAngele), 0);
     }
-    
+
 // Thrust
     thrust_force() {
-        this.thrustForce = vector.create(this.moveForce * Math.sin(this.forwardBackAngele), 0, 0);
+        this.thrustForce = vector.create(this.rotorMoveForce * Math.sin(this.forwardBackAngele), 0, 0);
     }
-    
+
 // Drage 
-    parasite_drage_force() {
-        this.parasiteDrag = vector.create(-(0.5 * this.CD * this.update.vilocity * this.update.vilocity * this.Ashape * this.airPressure), 0, 0);
+    drage_force() {
+        this.DragForce = vector.create(-(0.5 * this.CD * this.update.vilocity.getX() * this.update.vilocity.getX() * this.Ashape * this.P), 0, 0);
     }
 
     rotor_drage_force() {
-        this.rotorDragForce = 0.5 * (this.CD * this.W * this.W * this.r * this.r * this.rotorAshape * this.airPressure);
-    }
-
-    rotor_parasite_drag() {
-        this.rotorParasiteDrag = 0.5 * (this.CD * this.rotorVilocity * this.rotorVilocity * this.rotorAshape * this.airPressure);
+        this.rotorDragForce = 0.5 * (this.CD * this.rotorVilocity * this.rotorVilocity * this.rotorAshape * this.P);
     }
 
     rotor_total_forces(){
+        this.rotor_move_force();
         this.rotor_drage_force();
-        this.rotor_parasite_drag();
 
-        this.rotorTotalForces = this.rotorMoveForce - (this.rotorParasiteDrag + this.rotorDragForce);
-        console.log('rotor forcses from Forcse')
-        console.log(this.rotorTotalForces)
-        console.log(this.rotorMoveForce)
-        console.log(this.rotorDragForce)
-        console.log(this.rotorParasiteDrag)
+        this.rotorTotalForces = this.rotorMoveForce - this.rotorDragForce;
     }
 
     rotor_reset_forces(){
         this.rotorTotalForces = 0;
         this.rotorMoveForce = 0;
-        this.rotorParasiteDrag = 0;
+        this.rotorDragForce = 0;
     }
 
 // Total
     total_forces() {
         this.gravity_force();
-        this.move_force();
+        this.rotor_move_force();
         this.left_force();
         this.thrust_force();
-        this.parasite_drage_force();
+        this.drage_force();
+        this.rotor_drage_force();
         
         // the submission of the total forces
         this.totalForces = this.totalForces.add(this.gravityForce);
         this.totalForces = this.totalForces.add(this.leftForce);
         this.totalForces = this.totalForces.add(this.thrustForce);
-        this.totalForces = this.totalForces.add(this.parasiteDrag);
+        this.totalForces = this.totalForces.add(this.DragForce);
+        this.totalForces = this.totalForces.add(vector.create( -this.rotorDragForce, 0, 0));
     }
 
 // Reset
     reset_forces(){
         this.totalForces = vector.create(0, 0, 0);
         this.gravityForce = vector.create(0, 0, 0);
-        this.moveForce = vector.create(0, 0, 0);
+        this.rotorMoveForce = 0;
         this.leftForce = vector.create(0, 0, 0);
         this.thrustForce = vector.create(0, 0, 0);
+        this.DragForce = vector.create(0, 0, 0);
     }
 
 // States

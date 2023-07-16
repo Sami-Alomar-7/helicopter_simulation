@@ -4,44 +4,51 @@ import Forces from "./forces";
 class Update {
     constructor(
         r,
-        spinnerSpace,
         heliMass,
         fualMass,
-        temperature, 
-        airPressure,
+        temperature,
         windSpeed
     ){
+        this.totalForces = vector.create(0, 0, 0);
         this.acceleration = vector.create(0, 0, 0);
         this.vilocity = vector.create(0, 0, 0);
         this.position = vector.create(0, 0, 0);
-        this.totalForces = vector.create(0, 0, 0);
         this.rotorTotalForces = 0;
         this.rotorAcceleration = 0;
         this.W = 0;
         this.r = r; 
         this.rotorVelocity = 0;
-        this.rotoeMass = 14;
+        this.rotorMass = 14;
         this.fualMass = fualMass;
         this.heliMass = heliMass;
-        this.totalMass = heliMass + fualMass + this.rotoeMass;
+        this.totalMass = heliMass + fualMass + this.rotorMass;
         this.update_angle = 0;
-        this.dTime = 0.01;
+        this.dTime = 0.001;
         this.ground = false;
-        this.test = 1;
-        this.forces = new Forces(this, r, spinnerSpace, heliMass, fualMass, 1.33, 0.27, temperature, airPressure, windSpeed, 10);
+        this.forces = new Forces(
+            this,
+            r,
+            heliMass,
+            fualMass,
+            1.33,
+            0.27,
+            temperature,
+            windSpeed
+        );
     }
     // call the rotor total-forces then update the rotor f,a,w,v here
     rotor_update(){
+        this.forces.rotor_reset_forces();
         this.forces.rotor_total_forces();
         console.log('rotor total forces from update')
         console.log(this.forces.rotorTotalForces)
-        this.rotorAcceleration = this.forces.rotorTotalForces / this.rotoeMass;
+        this.rotorAcceleration = this.forces.rotorTotalForces / this.rotorMass;
         console.log('rotor acceleration from update')
         console.log(this.rotorAcceleration)
-        this.W = this.rotorAcceleration * this.dTime;
+        this.W += this.rotorAcceleration * this.dTime;
         console.log('rotor W from update')
         console.log(this.W)
-        this.rotorVelocity = this.W * this.r;
+        this.rotorVelocity += this.W * this.r;
         console.log('rotor rotor velocity from update')
         console.log(this.rotorVelocity)
         this.forces.rotorVelocity = this.rotorVelocity;
@@ -68,9 +75,17 @@ class Update {
         this.update();
     }
 
+    update_on_fly() {
+        this.forces.reset_forces();
+        this.forces.total_forces();
+
+        this.update();
+    }
+
     update(){
         console.log('total forces from update')
         console.log(this.forces.totalForces)
+        
         this.totalForces = vector.create(
             this.forces.totalForces.getX(),
             this.forces.totalForces.getY(),
@@ -85,27 +100,20 @@ class Update {
             (this.totalForces.getY() / this.totalMass),
             (this.totalForces.getZ() / this.totalMass)
         );
-    
-        console.log('acceleration from update')
-        console.log(this.acceleration)
 
         this.vilocity = vector.create(
             this.vilocity.getX() + this.acceleration.getX() * this.dTime,
             this.vilocity.getY() + this.acceleration.getY() * this.dTime,
             this.vilocity.getZ() + this.acceleration.getZ() * this.dTime
         );
-        
-        console.log('vilocity from update')
-        console.log(this.vilocity)
 
-        this.position.setX(this.position.getX() + this.vilocity.getX() * this.dTime);
-        this.position.setY(this.position.getY() + this.vilocity.getY() * this.dTime);
-        this.position.setZ(this.position.getZ() + this.vilocity.getZ() * this.dTime);
+        this.position = vector.create(
+            this.position.getX() + this.vilocity.getX() * this.dTime,
+            this.position.getY() + this.vilocity.getY() * this.dTime,
+            this.position.getZ() + this.vilocity.getZ() * this.dTime
+        );
 
-        this.position.multiply(6000);
-
-        console.log('position from update')
-        console.log(this.position)
+        this.forces.position = this.position;
     }
 
     reset_update(){
