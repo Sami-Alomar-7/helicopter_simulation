@@ -5,6 +5,7 @@ import { block_8, block_9, block_10, block_11, block_12, block_13, block_14, blo
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import Update from './phy/update';
 import StarterSystem from './phy/starterSystem';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 /**
  * Base
@@ -165,18 +166,36 @@ gltfloader.load(
 let model;
 const heli = new THREE.Group();
 
-gltfloader.load(
-    'static/models/kopra2.glb',
-    (gltf) => {
-        model = gltf.scene;
-        heli.add(gltf.scene);
-    }
-)
+// gltfloader.load(
+//     'static/models/kopra2.glb',
+//     (gltf) => {
+//         model = gltf.scene;
+//         heli.add(gltf.scene);
+//     }
+// )
 
-heli.position.x = 1;
-heli.position.y = 1;
-heli.position.z = 1;
-heli.scale.set(100,100,100)
+
+
+gltfloader.load('static/models/HelicopterBody.glb', function (gltf) {
+    model = gltf.scene;
+    heli.add(gltf.scene);
+  });
+  
+  gltfloader.load('static/models/upperfan.glb', function (gltf) {
+    model = gltf.scene;
+    heli.add(gltf.scene);
+  });
+  
+  gltfloader.load('static/models/TailFan.glb', function (gltf) {
+    model = gltf.scene;
+    heli.add(gltf.scene);
+  });
+  
+
+heli.position.x = 0;
+heli.position.y = -7400;
+heli.position.z = 0;
+heli.scale.set(200,200,200)
 scene.add(heli);
 
 const floorTexture = textureLoader.load('/static/textures/pavement.jpg', )
@@ -273,11 +292,11 @@ camera.position.y = 0;
 camera.position.z = 0;
 scene.add(camera)
 
-/*
+
 // Controls
-const controls = new OrbitControls(camera, canvas)
-controls.enableDamping = true
-*/
+// const controls = new OrbitControls(camera, canvas)
+// controls.enableDamping = true
+
 /**
  * Renderer
  */
@@ -286,6 +305,7 @@ const renderer = new THREE.WebGLRenderer({
 })
 renderer.setSize(sizes.width, sizes.height)
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+
 
 // test
 // initial the forces
@@ -326,7 +346,7 @@ const tick = () => {
 
     // Render
     renderer.render(scene,camera);
-    
+    // controls.update();
     // wait for the model to render befor animating any thing
     if(model){
         // the state where the helicopter is on the ground before starting the starter system
