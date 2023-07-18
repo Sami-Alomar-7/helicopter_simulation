@@ -14,7 +14,7 @@ class Forces{
         this.totalForces = vector.create(0, 0, 0);
         this.position = vector.create(0, 0, 0);
         this.r = r;
-        this.rotorVilocity = 0;
+        this.rotorVelocity = 0;
         this.CL = CL;
         this.CD = CD;
         this.temperature = temperature;
@@ -45,6 +45,20 @@ class Forces{
         this.rotorAshape = 1.7;
         this.P = 1.225;
         this.update = update;
+        this.first = false;
+        // free stream velocity in m/s
+        this.v_inf = 10;
+        /* 
+        * Cd0​ and Cd1​ are drag coefficients that depend on 
+        * the blade shape, angle of attack, and Reynolds number
+        * radius of the rotor in m 
+        */
+        // profile drag coefficient var 
+        this.Cd0 = 0.01; 
+        // induced drag coefficient 
+        this.Cd1 = 0.1; 
+        // reference area of the rotor in m^2
+        this.A = Math.PI * this.update.r * this.update.r; 
     }
 
 // Gravity
@@ -73,7 +87,7 @@ class Forces{
 // Move
     rotor_move_force() {
         // calculate the moving force for rotor
-        this.rotorMoveForce = 0.5 * this.CL * this.rotorVilocity * this.rotorVilocity * this.rotorAshape * this.P;
+        this.rotorMoveForce = 0.5 * this.CL * this.rotorVelocity * this.rotorVelocity * this.rotorAshape * this.P;
     }
 
 // Left
@@ -91,15 +105,21 @@ class Forces{
         this.DragForce = vector.create(-(0.5 * this.CD * this.update.vilocity.getX() * this.update.vilocity.getX() * this.Ashape * this.P), 0, 0);
     }
 
-    rotor_drage_force() {
-        this.rotorDragForce = 0.5 * (this.CD * this.rotorVilocity * this.rotorVilocity * this.rotorAshape * this.P);
+    rotor_drag_force() { 
+        this.rotorDragForce = 0.5 * this.CD * this.rotorVelocity * this.rotorVelocity * this.P;
     }
 
     rotor_total_forces(){
-        this.rotor_move_force();
-        this.rotor_drage_force();
-
-        this.rotorTotalForces = this.rotorMoveForce - this.rotorDragForce;
+        this.rotor_drag_force();
+        
+        if(!this.first){
+            this.rotorTotalForces = this.update.rotorTotalForces;
+            this.first = true;
+        }
+        this.rotorTotalForces -= this.rotorDragForce;
+        console.log('total forces from forces')
+        console.log(this.rotorTotalForces);
+        console.log(this.rotorTotalForces)
     }
 
     rotor_reset_forces(){
@@ -115,7 +135,7 @@ class Forces{
         this.left_force();
         this.thrust_force();
         this.drage_force();
-        this.rotor_drage_force();
+        this.rotor_drag_force();
         
         // the submission of the total forces
         this.totalForces = this.totalForces.add(this.gravityForce);

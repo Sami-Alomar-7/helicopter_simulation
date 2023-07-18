@@ -42,20 +42,27 @@ class Update {
         this.forces.rotor_total_forces();
         console.log('rotor total forces from update')
         console.log(this.forces.rotorTotalForces)
-        this.rotorAcceleration = this.forces.rotorTotalForces / this.rotorMass;
+        this.rotorAcceleration = this.forces.rotorTotalForces / this.totalMass;
         console.log('rotor acceleration from update')
         console.log(this.rotorAcceleration)
-        this.W += this.rotorAcceleration * this.dTime;
+        this.W = this.rotorAcceleration * this.dTime;
         console.log('rotor W from update')
         console.log(this.W)
-        this.rotorVelocity += this.W * this.r;
-        console.log('rotor rotor velocity from update')
+        this.rotorVelocity = this.W * this.r;
+        console.log('rotor velocity from update')
         console.log(this.rotorVelocity)
+        if(this.W <= 0){
+            this.W = this.W;
+            if(this.rotorVelocity <= 0){
+                this.W = 0;
+                this.rotorVelocity = 0;
+            }
+        }
         this.forces.rotorVelocity = this.rotorVelocity;
     }
 
     update_spinner_vilocity(f){
-        this.forces.rotorMoveForce += f;
+        this.rotorForce += f;
         this.rotor_update();
     }
 

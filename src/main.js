@@ -4,6 +4,7 @@ import { block_1, block_3, block_2, block_4, block_5, block_6, block_7, } from '
 import { block_8, block_9, block_10, block_11, block_12, block_13, block_14, block_15, block_16 } from './city'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import Update from './phy/update';
+//import uhF from 'D:/Dem Bois/College/Third Year/Second Semester/Test For Calculations Project/src/phy/update_helperFucntion';
 import StarterSystem from './phy/starterSystem';
 
 /**
@@ -143,6 +144,29 @@ gltfloader.load(
 
     }
 )
+let model;
+const heli = new THREE.Group();
+
+gltfloader.load('static/models/HelicopterBody.glb', function (gltf) {
+    model = gltf.scene;
+    heli.add(gltf.scene);
+    });
+
+gltfloader.load('static/models/upperfan.glb', function (gltf) {
+    model = gltf.scene;
+    heli.add(gltf.scene);
+    });
+
+gltfloader.load('static/models/TailFan.glb', function (gltf) {
+    model = gltf.scene;
+    heli.add(gltf.scene);
+    });
+
+heli.position.x = 0;
+heli.position.y = -7400;
+heli.position.z = 0;
+heli.scale.set(200,200,200)
+scene.add(heli);
 
 // gltfloader.load(
 //     'static/models/street/tree.glb',
@@ -162,21 +186,21 @@ gltfloader.load(
 //     }
 // )
 
-let model;
-const heli = new THREE.Group();
+// let model;
+// const heli = new THREE.Group();
 
-gltfloader.load(
-    'static/models/kopra2.glb',
-    (gltf) => {
-        model = gltf.scene;
-        heli.add(gltf.scene);
-    }
-)
+// gltfloader.load(
+//     'static/models/kopra2.glb',
+//     (gltf) => {
+//         model = gltf.scene;
+//         heli.add(gltf.scene);
+//     }
+// )
 
 heli.position.x = 1;
 heli.position.y = 1;
 heli.position.z = 1;
-heli.scale.set(100,100,100)
+heli.scale.set(200,200,200)
 scene.add(heli);
 
 const floorTexture = textureLoader.load('/static/textures/pavement.jpg', )
@@ -268,9 +292,9 @@ window.addEventListener('resize', () => {
 */
 // Base camera
 const camera = new THREE.PerspectiveCamera(444, ((sizes.width / 1) / (sizes.height / 1)), 0.1, 50000)
-camera.position.x = 0;
-camera.position.y = 0;
-camera.position.z = 0;
+camera.position.x = 0
+camera.position.y = 0
+camera.position.z = 0
 scene.add(camera)
 
 /*
@@ -290,7 +314,7 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 // test
 // initial the forces
 const update = new Update(
-    4.6,
+    3.84,
     680,
     76,
     35,
@@ -345,11 +369,18 @@ const tick = () => {
                 starterSystem.rotorVelocity += starterSystem.starterTorque / starterSystem.rotorInertia * (currentTime - starterSystem.startTime) / 1000;
                 // update to the new velocity every where
                 update.rotorVelocity = starterSystem.rotorVelocity;
-                update.forces.rotorVilocity = starterSystem.rotorVelocity;
-                update.W = update.forces.rotorVilocity / update.r;
+                update.forces.rotorVelocity = starterSystem.rotorVelocity;
+                update.W = update.forces.rotorVelocity / update.r;
                 console.log(starterSystem.rotorVelocity);
                 console.log(update.rotorVelocity);
-                console.log(update.forces.rotorVilocity);
+                console.log(update.forces.rotorVelocity);
+                console.log(update.W)
+                update.rotorAcceleration = starterSystem.deltaRotorSpeed / starterSystem.accelerationTime;
+                console.log('acc from starter')
+                console.log(update.rotorAcceleration);
+                update.rotorTotalForces = (starterSystem.deltaRotorSpeed / starterSystem.accelerationTime) * starterSystem.rotorInertia;
+                console.log('force from starter')
+                console.log(update.rotorTotalForces);
             }
             // when reaches the desired rotor velocity then mark the helicopter as lusnhed and reset the otherS
             else{
