@@ -87,7 +87,7 @@ class Forces{
 // Move
     rotor_move_force() {
         // calculate the moving force for rotor
-        this.rotorMoveForce = 0.5 * this.CL * this.rotorVelocity * this.rotorVelocity * this.rotorAshape * this.P;
+        this.rotorMoveForce = 0.5 * this.CL * this.update.rotorVelocity * this.update.rotorVelocity * (this.rotorAshape + this.Ashape) * this.P;
     }
 
 // Left
@@ -102,24 +102,16 @@ class Forces{
 
 // Drage 
     drage_force() {
-        this.DragForce = vector.create(-(0.5 * this.CD * this.update.vilocity.getX() * this.update.vilocity.getX() * this.Ashape * this.P), 0, 0);
-    }
-
-    rotor_drag_force() { 
-        this.rotorDragForce = 0.5 * this.CD * this.rotorVelocity * this.rotorVelocity * this.P;
+        this.DragForce = vector.create(-(0.5 * this.CD * this.update.vilocity.getX() * this.update.vilocity.getX() * (this.Ashape + this.rotorAshape) * this.P), 0, 0);
     }
 
     rotor_total_forces(){
-        this.rotor_drag_force();
-        
         if(!this.first){
             this.rotorTotalForces = this.update.rotorTotalForces;
             this.first = true;
         }
-        this.rotorTotalForces -= this.rotorDragForce;
         console.log('total forces from forces')
         console.log(this.rotorTotalForces);
-        console.log(this.rotorTotalForces)
     }
 
     rotor_reset_forces(){
@@ -135,21 +127,18 @@ class Forces{
         this.left_force();
         this.thrust_force();
         this.drage_force();
-        this.rotor_drag_force();
         
         // the submission of the total forces
         this.totalForces = this.totalForces.add(this.gravityForce);
         this.totalForces = this.totalForces.add(this.leftForce);
         this.totalForces = this.totalForces.add(this.thrustForce);
         this.totalForces = this.totalForces.add(this.DragForce);
-        this.totalForces = this.totalForces.add(vector.create( -this.rotorDragForce, 0, 0));
     }
 
 // Reset
     reset_forces(){
         this.totalForces = vector.create(0, 0, 0);
         this.gravityForce = vector.create(0, 0, 0);
-        this.rotorMoveForce = 0;
         this.leftForce = vector.create(0, 0, 0);
         this.thrustForce = vector.create(0, 0, 0);
         this.DragForce = vector.create(0, 0, 0);

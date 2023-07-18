@@ -51,13 +51,6 @@ class Update {
         this.rotorVelocity = this.W * this.r;
         console.log('rotor velocity from update')
         console.log(this.rotorVelocity)
-        if(this.W <= 0){
-            this.W = this.W;
-            if(this.rotorVelocity <= 0){
-                this.W = 0;
-                this.rotorVelocity = 0;
-            }
-        }
         this.forces.rotorVelocity = this.rotorVelocity;
     }
 
