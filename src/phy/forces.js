@@ -6,16 +6,18 @@ class Forces{
         r,
         heliMass,
         fualMass,
-        CL,
         CD,
         temperature,
         windSpeed
     ) {
+        // total forcse vector (N)
         this.totalForces = vector.create(0, 0, 0);
+        // the helicopter position (m)
         this.position = vector.create(0, 0, 0);
+        // the rotor length (m)
         this.r = r;
         this.rotorVelocity = 0;
-        this.CL = CL;
+        this.CL = 0;
         this.CD = CD;
         this.temperature = temperature;
         this.totalForces = vector.create(0, 0, 0);
@@ -25,14 +27,10 @@ class Forces{
         this.leftForce = vector.create(0, 0, 0);
         this.thrustForce = vector.create(0, 0, 0);
         this.DragForce = vector.create(0, 0, 0);
-        this.rotorTotalForces = 0;
-        this.rotorDragForce = 0;
-        this.rotorMoveForce = 0;
         this.windSpeed = windSpeed;
         this.fualMass = fualMass;
-        this.rotorMass = 14;
         this.heliMass = heliMass;
-        this.totalMass = heliMass + fualMass + this.rotorMass;
+        this.totalMass = heliMass + fualMass;
         this.massFlowRate = 2030;
         this.gravity = 0;
         this.latitudInRadians = 0.71;
@@ -43,22 +41,12 @@ class Forces{
         this.GM = 3.986004418 * Math.pow(10,14);
         this.Ashape = 46.2;
         this.rotorAshape = 1.7;
-        this.P = 1.225;
         this.update = update;
         this.first = false;
-        // free stream velocity in m/s
-        this.v_inf = 10;
-        /* 
-        * Cd0​ and Cd1​ are drag coefficients that depend on 
-        * the blade shape, angle of attack, and Reynolds number
-        * radius of the rotor in m 
-        */
-        // profile drag coefficient var 
-        this.Cd0 = 0.01; 
-        // induced drag coefficient 
-        this.Cd1 = 0.1; 
+        this.forwardBackAngele = 0;
         // reference area of the rotor in m^2
-        this.A = Math.PI * this.update.r * this.update.r; 
+        this.A = Math.PI * this.update.r * this.update.r;
+        this.velocityVectorLength = 0;
     }
 
 // Gravity
@@ -85,74 +73,63 @@ class Forces{
     }
 
 // Move
-    rotor_move_force() {
+    move_force() {
         // calculate the moving force for rotor
-        this.rotorMoveForce = 0.5 * this.CL * this.rotorVelocity * this.rotorVelocity * this.rotorAshape * this.P;
+        this.moveForce = 0.5 * this.CL * this.update.rotorVelocity * this.update.rotorVelocity * (this.rotorAshape + this.Ashape) * this.update.currentP;
     }
 
 // Left
     left_force() {
-        this.leftForce = vector.create(0, this.rotorMoveForce * Math.cos(this.forwardBackAngele), 0);
+        this.leftForce = vector.create(0, this.moveForce * Math.cos(this.forwardBackAngele), 0);
     }
 
 // Thrust
     thrust_force() {
-        this.thrustForce = vector.create(this.rotorMoveForce * Math.sin(this.forwardBackAngele), 0, 0);
+        this.thrustForce = vector.create(this.moveForce * Math.sin(this.forwardBackAngele), 0, 0);
     }
 
 // Drage 
     drage_force() {
-        this.DragForce = vector.create(-(0.5 * this.CD * this.update.vilocity.getX() * this.update.vilocity.getX() * this.Ashape * this.P), 0, 0);
+        this.velocityVectorLength = this.update.velocity.getLength();
+        this.DragForce = 0.5 * this.CD * this.velocityVectorLength * this.velocityVectorLength * (this.Ashape + this.rotorAshape) * this.update.currentP;
     }
 
-    rotor_drag_force() { 
-        this.rotorDragForce = 0.5 * this.CD * this.rotorVelocity * this.rotorVelocity * this.P;
+    drage_force_Y() {
+        this.DrageForceY = vector.create(0, -(this.DragForce * Math.cos(this.forwardBackAngele)), 0);
     }
 
-    rotor_total_forces(){
-        this.rotor_drag_force();
-        
-        if(!this.first){
-            this.rotorTotalForces = this.update.rotorTotalForces;
-            this.first = true;
-        }
-        this.rotorTotalForces -= this.rotorDragForce;
-        console.log('total forces from forces')
-        console.log(this.rotorTotalForces);
-        console.log(this.rotorTotalForces)
-    }
-
-    rotor_reset_forces(){
-        this.rotorTotalForces = 0;
-        this.rotorMoveForce = 0;
-        this.rotorDragForce = 0;
+    drage_force_X() {
+        this.DrageForceX = vector.create(-(this.DragForce * Math.sin(this.forwardBackAngele)), 0, 0);
     }
 
 // Total
     total_forces() {
         this.gravity_force();
-        this.rotor_move_force();
+        this.move_force();
         this.left_force();
         this.thrust_force();
         this.drage_force();
-        this.rotor_drag_force();
+        this.drage_force_X();
+        this.drage_force_Y();
         
         // the submission of the total forces
         this.totalForces = this.totalForces.add(this.gravityForce);
         this.totalForces = this.totalForces.add(this.leftForce);
         this.totalForces = this.totalForces.add(this.thrustForce);
-        this.totalForces = this.totalForces.add(this.DragForce);
-        this.totalForces = this.totalForces.add(vector.create( -this.rotorDragForce, 0, 0));
+        this.totalForces = this.totalForces.add(this.DrageForceX);
+        this.totalForces = this.totalForces.add(this.DrageForceY);
     }
 
 // Reset
     reset_forces(){
         this.totalForces = vector.create(0, 0, 0);
         this.gravityForce = vector.create(0, 0, 0);
-        this.rotorMoveForce = 0;
+        this.moveForce = 0;
         this.leftForce = vector.create(0, 0, 0);
         this.thrustForce = vector.create(0, 0, 0);
-        this.DragForce = vector.create(0, 0, 0);
+        this.DragForce = 0;
+        this.DrageForceX = vector.create(0, 0, 0);
+        this.DrageForceY = vector.create(0, 0, 0);
     }
 
 // States

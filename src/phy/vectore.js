@@ -71,7 +71,7 @@ var vector = {
   // },
 
   getLength: function () {
-    return Math.sqrt(this._x * this._x + this._y * this._y + this.z * this.z);
+    return Math.sqrt(this._x * this._x + this._y * this._y + this._z * this._z);
   },
 
   add: function (v2) {

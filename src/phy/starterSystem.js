@@ -3,7 +3,7 @@ class StarterSystem{
         this.rotorInertia = 100;
         this.rotorVelocity = 0;
         // the torque provided by the starter motor
-        this.starterTorque = 400;
+        this.starterTorque = 100;
         // the duaration ot the starting system till finish
         this.starterDuaration = 5;
 
