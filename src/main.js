@@ -144,23 +144,24 @@ gltfloader.load(
 
     }
 )
-let model;
+let model, upperFan;
 const heli = new THREE.Group();
 
 gltfloader.load('static/models/HelicopterBody.glb', function (gltf) {
     model = gltf.scene;
     heli.add(gltf.scene);
-    });
+});
 
 gltfloader.load('static/models/upperfan.glb', function (gltf) {
     model = gltf.scene;
+    upperFan = model;
     heli.add(gltf.scene);
-    });
+});
 
 gltfloader.load('static/models/TailFan.glb', function (gltf) {
     model = gltf.scene;
     heli.add(gltf.scene);
-    });
+});
 
 heli.position.x = 0;
 heli.position.y = -7400;
@@ -314,10 +315,15 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 // test
 // initial the forces
 const update = new Update(
+    // the rotor length (m)
     3.84,
+    // the helicopter mass (Kg)
     680,
+    // the fual mass (Kg)
     76,
+    // the temperature (celuses)
     35,
+    // the sind speed (km/h)
     40
 );
 
@@ -326,15 +332,19 @@ const starterSystem = new StarterSystem();
 
 // Add an event listener for the keydown event on the document
 document.addEventListener("keydown", function(event) {
-    // Check if the key pressed is "w"
-    if(start){
+    // if the helicopter not on the ground then you can fly with it
+    if(!ground){
         if (event.key == "w") {
             update.move_up();
         }
         if (event.key == "8") {
-            
+            update.move_forward();
+        }
+        if(event.key == "c"){
+            update.update_alpha();
         }
     }
+    // when it's not on the ground the only thing you can do is lunching the starter system
     if(event.key == "o"){
         start = true;
         starterSystem.setTime();
@@ -371,16 +381,11 @@ const tick = () => {
                 update.rotorVelocity = starterSystem.rotorVelocity;
                 update.forces.rotorVelocity = starterSystem.rotorVelocity;
                 update.W = update.forces.rotorVelocity / update.r;
-                console.log(starterSystem.rotorVelocity);
                 console.log(update.rotorVelocity);
-                console.log(update.forces.rotorVelocity);
                 console.log(update.W)
-                update.rotorAcceleration = starterSystem.deltaRotorSpeed / starterSystem.accelerationTime;
-                console.log('acc from starter')
-                console.log(update.rotorAcceleration);
-                update.rotorTotalForces = (starterSystem.deltaRotorSpeed / starterSystem.accelerationTime) * starterSystem.rotorInertia;
-                console.log('force from starter')
-                console.log(update.rotorTotalForces);
+                update.rotorMoveForce = (starterSystem.deltaRotorSpeed / starterSystem.accelerationTime) * starterSystem.rotorInertia;
+                upperFan.rotation.y = Math.PI * update.W;
+                update.rotor_update();
             }
             // when reaches the desired rotor velocity then mark the helicopter as lusnhed and reset the otherS
             else{
@@ -391,10 +396,9 @@ const tick = () => {
         }
         // the state after the starter system is started where the helicopter above the ground
         else{
-            // update the rotor f,a,w,v after re-calculating the total forces which effect the rotor
-            update.rotor_update();
             // update the 
             update.update_on_fly();
+            upperFan.rotation.y += Math.PI * update.W;
             
             heli.position.x = update.position.getX();
             heli.position.y = update.position.getY();
