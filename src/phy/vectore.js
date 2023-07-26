@@ -24,13 +24,13 @@ var vector = {
     },
 
     getY: function () {
-        return this._y;
+      return this._y;
     },
 
     setZ: function (value) {
       this._z = value;
     },
-
+    
     getZ: function () {
         return this._z;
     },
@@ -72,6 +72,10 @@ var vector = {
 
   getLength: function () {
     return Math.sqrt(this._x * this._x + this._y * this._y + this._z * this._z);
+  },
+
+  isPositive: function () {
+    return (this._x >= 0 && this._y >= 0 && this._z >= 0);
   },
 
   add: function (v2) {
@@ -118,6 +122,12 @@ var vector = {
     this._x *= val;
     this._y *= val;
     this._z *= val;
+  },
+
+  multiplyByVector : function (vector) {
+    this._x *= vector.getX();
+    this._y *= vector.getY();
+    this._z *= vector.getZ();
   },
 
   divideBy: function (val) {

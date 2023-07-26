@@ -166,7 +166,7 @@ gltfloader.load('static/models/TailFan.glb', function (gltf) {
 heli.position.x = 0;
 heli.position.y = -7400;
 heli.position.z = 0;
-heli.scale.set(200,200,200)
+heli.scale.set(100,100,100)
 scene.add(heli);
 
 // gltfloader.load(
@@ -201,7 +201,7 @@ scene.add(heli);
 heli.position.x = 1;
 heli.position.y = 1;
 heli.position.z = 1;
-heli.scale.set(200,200,200)
+heli.scale.set(100,100,100)
 scene.add(heli);
 
 const floorTexture = textureLoader.load('/static/textures/pavement.jpg', )
@@ -335,17 +335,49 @@ document.addEventListener("keydown", function(event) {
     // if the helicopter not on the ground then you can fly with it
     if(!ground){
         if (event.key == "w") {
+            // increase the force which moves the rotor which will reduce the move force for the helicopter to increase
+            // ... We can assume that we are increasing the power given to the helicopter
             update.move_up();
         }
+        if (event.key == "d") {
+            // increase the right angel which will decrease the forcse in the x axis and increase it in the -z axis
+            update.move_right();
+        }
+        if (event.key == "a") {
+            // increase the left angel which will decrease the forcse in the x axis and increase it in the z axis
+            update.move_left();
+        }
+        if (event.key == "s") {
+            // decrease the force which moves the rotor which will reduce the move force for the helicopter to decrease
+            // ... We can assume that we are decreasing the power given to the helicopter
+            update.move_down();
+        }
         if (event.key == "8") {
+            // increase the angel between the X axis and the y axis which will decrease the left force and increase the thrust force
             update.move_forward();
         }
-        if(event.key == "c"){
-            update.update_alpha();
+        if (event.key == "6") {
+            
         }
+        if (event.key == "4") {
+            
+        }
+        if (event.key == "2") {
+            // decrease the angel between the X axis and the y axis which will increase the left force and decrease the thrust force
+            update.move_backword();
+        }
+    }
+    if(event.key == "c"){
+        // increase the angel which will increase the CL and then the move force for the helicopter
+        update.increase_alpha();
+    }
+    if(event.key == "x"){
+        // decrease the angel which will decrease the CL and then the move force for the helicopter
+        update.decrease_alpha();
     }
     // when it's not on the ground the only thing you can do is lunching the starter system
     if(event.key == "o"){
+        // start the starter system 
         start = true;
         starterSystem.setTime();
     }
@@ -377,14 +409,17 @@ const tick = () => {
             // while the desired time isn't exceeded yet and the velocity of the rotor didn't reach the desired velocity then keep increasing it
             if(currentTime < starterSystem.endTime && starterSystem.rotorVelocity == starterSystem.finalRotorSpeed !== 0){
                 starterSystem.rotorVelocity += starterSystem.starterTorque / starterSystem.rotorInertia * (currentTime - starterSystem.startTime) / 1000;
-                // update to the new velocity every where
+                // update to the new velocity and W 
                 update.rotorVelocity = starterSystem.rotorVelocity;
                 update.forces.rotorVelocity = starterSystem.rotorVelocity;
                 update.W = update.forces.rotorVelocity / update.r;
+                // print the current rotor velocity
                 console.log(update.rotorVelocity);
-                console.log(update.W)
+                // calculate the force which redused this velocity
                 update.rotorMoveForce = (starterSystem.deltaRotorSpeed / starterSystem.accelerationTime) * starterSystem.rotorInertia;
-                upperFan.rotation.y = Math.PI * update.W;
+                // rotate the fan 
+                upperFan.rotation.y += Math.PI * update.W * update.dTime;
+                // call the function which will calculate the acceleration and velocity for the rotor and give it to the forces
                 update.rotor_update();
             }
             // when reaches the desired rotor velocity then mark the helicopter as lusnhed and reset the otherS
@@ -397,16 +432,20 @@ const tick = () => {
         // the state after the starter system is started where the helicopter above the ground
         else{
             // update the 
-            update.update_on_fly();
-            upperFan.rotation.y += Math.PI * update.W;
+            if(update.position.getY() < 0 || update.alpha == 0)
+                update.reset_update();
+            else
+                update.update_on_fly();
             
-            heli.position.x = update.position.getX();
-            heli.position.y = update.position.getY();
-            heli.position.z = update.position.getZ();
+            upperFan.rotation.y += Math.PI * update.W * update.dTime;
             
-            camera.position.x = update.position.getX() + 1500;
-            camera.position.y = update.position.getY() + 1500;
-            camera.position.z = update.position.getZ();
+            heli.position.x = update.position.getX() * 10;
+            heli.position.y = update.position.getY() * 10;
+            heli.position.z = update.position.getZ() * 10;
+
+            camera.position.x = (update.position.getX() * 10) + 1500;
+            camera.position.y = (update.position.getY() * 10) + 1500;
+            camera.position.z = (update.position.getZ() * 10);
             camera.lookAt(heli.position.x, heli.position.y, heli.position.z);
             
             if(model.position.y <= -7550)

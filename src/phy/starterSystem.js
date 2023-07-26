@@ -5,7 +5,7 @@ class StarterSystem{
         // the torque provided by the starter motor
         this.starterTorque = 100;
         // the duaration ot the starting system till finish
-        this.starterDuaration = 5;
+        this.starterDuaration = 6;
 
         // the engine's power
         this.P = 104;
