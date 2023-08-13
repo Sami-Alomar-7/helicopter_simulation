@@ -1,6 +1,6 @@
 import vector from "./vectore";
 
-class Forces{
+class Forces {
     constructor(
         update,
         r,
@@ -35,10 +35,10 @@ class Forces{
         this.gravity = 0;
         this.latitudInRadians = 0.71;
         this.semi_majorAxis = {
-            a : 6378137,
-            b : 6356752.314245
+            a: 6378137,
+            b: 6356752.314245
         }
-        this.GM = 3.986004418 * Math.pow(10,14);
+        this.GM = 3.986004418 * Math.pow(10, 14);
         this.Ashape = 46.2;
         this.rotorAshape = 1.7;
         this.update = update;
@@ -50,8 +50,8 @@ class Forces{
         this.right = 0;
         this.left = 0;
     }
-// Gravity
-    gravity_force(){
+    // Gravity
+    gravity_force() {
         // W = m * g
         // first calculate the gravity acceleration debending on the heli-height
         this.gravity_acceleration();
@@ -59,71 +59,73 @@ class Forces{
         this.gravityForce = vector.create(0, -1 * this.totalMass * this.gravity, 0);
     }
     // calculate the gravity acceleration debending on WGS84 and Helmert's equations (https://mwrona.com/posts/gravity-models/)
-    gravity_acceleration(){
+    gravity_acceleration() {
         let height = this.position.getY();
         this.gravity = 9.780327 *
-            ( 1 + (0.0053024 * Math.pow(Math.sin(this.latitudInRadians), 2) ) 
-            - ( 0.0000058 * Math.pow(Math.sin(2 * this.latitudInRadians), 2) ) 
+            (1 + (0.0053024 * Math.pow(Math.sin(this.latitudInRadians), 2))
+                - (0.0000058 * Math.pow(Math.sin(2 * this.latitudInRadians), 2))
             ) + (this.GM / Math.pow(this.semi_majorAxis.a + height, 2)
                 - this.GM / Math.pow(this.semi_majorAxis.a, 2));
     }
-    test(){
+    test() {
         this.testForce = vector.create(0, this.totalMass * this.gravity, 0);
     }
-// Move
+    // Move
     move_force() {
         this.moveForce = 0.5 * this.CL * this.update.rotorVelocity * this.update.rotorVelocity * this.rotorAshape * this.update.currentP;
     }
     // Left
     left_force() {
         this.leftForce = vector.create(
-            0,
-            this.moveForce * Math.cos(this.forwardBackAngele) * Math.cos(this.right) * Math.cos(this.left), 
-            (this.right) ? 
-            -(this.moveForce * Math.cos(this.forwardBackAngele) * Math.cos(this.left) * Math.sin(this.right)) :
-            (this.left) ?
-            this.moveForce * Math.cos(this.forwardBackAngele) * Math.cos(this.right) * Math.sin(this.left) : 0
+            (this.right) ?
+                this.moveForce * Math.cos(this.forwardBackAngele) * Math.cos(this.left) * Math.sin(this.right) :
+                (this.left) ?
+                    -(this.moveForce * Math.cos(this.forwardBackAngele) * Math.cos(this.right) * Math.sin(this.left)) : 0,
+            this.moveForce * Math.cos(this.forwardBackAngele) * Math.cos(this.right) * Math.cos(this.left),
+            0
         );
     }
     // Thrust
     thrust_force() {
         this.thrustForce = vector.create(
-            -(this.moveForce * Math.sin(this.forwardBackAngele) * Math.cos(this.right) * Math.cos(this.left)), 
-            0, 
             (this.right) ?
-            -(this.moveForce * Math.sin(this.forwardBackAngele) * Math.cos(this.left) * Math.sin(this.right)) :
-            (this.left) ?
-            this.moveForce * Math.sin(this.forwardBackAngele) * Math.cos(this.right) * Math.sin(this.left) : 0
+                this.moveForce * Math.sin(this.forwardBackAngele) * Math.cos(this.left) * Math.sin(this.right) :
+                (this.left) ?
+                    -(this.moveForce * Math.sin(this.forwardBackAngele) * Math.cos(this.right) * Math.sin(this.left)) : 0,
+            0,
+            -(this.moveForce * Math.sin(this.forwardBackAngele) * Math.cos(this.right) * Math.cos(this.left))
         );
     }
-// Drage 
+    // Drage 
     drage_force() {
-        this.velocityVectorLength = this.update.velocity.getLength();
-        this.DragForce = 0.5 * this.CD * this.velocityVectorLength * this.velocityVectorLength* (this.Ashape + this.rotorAshape) * this.update.currentP;
+        this.velocityVectorLength = this.update.velocity.getForwardVelocity();
+        this.DragForce = 0.5 * this.CD * this.velocityVectorLength * this.velocityVectorLength * (this.Ashape + this.rotorAshape) * this.update.currentP;
     }
     // Drage on the Y axis
     drage_force_Y() {
         this.DrageForceY = vector.create(
-            0, 
-            -(this.DragForce * Math.cos(this.forwardBackAngele) * Math.cos(this.right) * Math.cos(this.left)), 
-            (this.right) ?
-            this.DragForce * Math.cos(this.forwardBackAngele) * Math.cos(this.left) * Math.sin(this.right) :
-            (this.left) ?
-            -(this.DragForce * Math.cos(this.forwardBackAngele) * Math.cos(this.right) * Math.sin(this.left)) : 0
+            // (this.right) ?
+            //     -(this.DragForce * Math.cos(this.forwardBackAngele) * Math.cos(this.left) * Math.sin(this.right)) :
+            //     (this.left) ?
+            //         this.DragForce * Math.cos(this.forwardBackAngele) * Math.cos(this.right) * Math.sin(this.left) : 0,
+            0,
+            -(this.DragForce * Math.cos(this.forwardBackAngele) * Math.cos(this.right) * Math.cos(this.left)),
+            0
         );
     }
     // Drage on the X axis
     drage_force_X() {
         this.DrageForceX = vector.create(
-            this.DragForce * Math.sin(this.forwardBackAngele) * Math.cos(this.right) * Math.cos(this.left), 
-            0, 
-            (this.right) ?
-            this.DragForce * Math.sin(this.forwardBackAngele) * Math.cos(this.left) * Math.sin(this.right) : 
-            (this.left) ?
-            -(this.DragForce * Math.sin(this.forwardBackAngele) * Math.cos(this.right) * Math.sin(this.left)) : 0
+            // (this.right) ?
+            //     -(this.DragForce * Math.sin(this.forwardBackAngele) * Math.cos(this.left) * Math.sin(this.right)) :
+            //     (this.left) ?
+            //         this.DragForce * Math.sin(this.forwardBackAngele) * Math.cos(this.right) * Math.sin(this.left) : 0,
+            0,
+            0,
+            this.DragForce * Math.sin(this.forwardBackAngele) * Math.cos(this.right) * Math.cos(this.left),
         );
     }
-// Total Forcse
+    // Total Forcse
     total_forces() {
         this.gravity_force();
         this.move_force();
@@ -139,8 +141,8 @@ class Forces{
         this.totalForces = this.totalForces.add(this.DrageForceX);
         this.totalForces = this.totalForces.add(this.DrageForceY);
     }
-// Reset each force and the the total forcse
-    reset_forces(){
+    // Reset each force and the the total forcse
+    reset_forces() {
         this.totalForces = vector.create(0, 0, 0);
         this.gravityForce = vector.create(0, 0, 0);
         this.testForce = vector.create(0, 0, 0);
@@ -151,8 +153,8 @@ class Forces{
         this.DrageForceX = vector.create(0, 0, 0);
         this.DrageForceY = vector.create(0, 0, 0);
     }
-// States
-    on_ground(){
+    // States
+    on_ground() {
         this.gravity_force();
         this.test();
         // the submission of the total forces

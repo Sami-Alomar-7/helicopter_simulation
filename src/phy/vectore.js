@@ -1,50 +1,50 @@
 var vector = {
-    _x: 0,
-    _y: 0,
-    _z: 0,
+  _x: 0,
+  _y: 0,
+  _z: 0,
 
-    create: function (x, y, z) {
-        var obj = Object.create(this);
-        obj.setX(x);
-        obj.setY(y);
-        obj.setZ(z);
-        return obj;
-    },
+  create: function (x, y, z) {
+    var obj = Object.create(this);
+    obj.setX(x);
+    obj.setY(y);
+    obj.setZ(z);
+    return obj;
+  },
 
-    setX: function (value) {
-        this._x = value;
-    },
+  setX: function (value) {
+    this._x = value;
+  },
 
-    getX: function () {
-        return this._x;
-    },
+  getX: function () {
+    return this._x;
+  },
 
-    setY: function (value) {
-        this._y = value;
-    },
+  setY: function (value) {
+    this._y = value;
+  },
 
-    getY: function () {
-      return this._y;
-    },
+  getY: function () {
+    return this._y;
+  },
 
-    setZ: function (value) {
-      this._z = value;
-    },
-    
-    getZ: function () {
-        return this._z;
-    },
+  setZ: function (value) {
+    this._z = value;
+  },
 
-    setAngleXY: function (angle) {
-        var length = this.getLength();
-        this._x = Math.cos(angle) * length;
-        this._y = Math.sin(angle) * length;
-    },
+  getZ: function () {
+    return this._z;
+  },
 
-    setAngle: function (angleXY,) {
-        var length = this.getLength();
-        this._x = Math.cos(angleXY) * length; // alpha, the angle between x and y
-    },
+  setAngleXY: function (angle) {
+    var length = this.getLength();
+    this._x = Math.cos(angle) * length;
+    this._y = Math.sin(angle) * length;
+  },
+
+  setAngle: function (angleXY,) {
+    var length = this.getLength();
+    this._x = Math.cos(angleXY) * length; // alpha, the angle between x and y
+  },
 
   // inits: function (length, angleXY, angleXZ) {
   //   this._x = Math.cos(angleXY) * Number(Math.cos(angleXZ).toFixed(7)) * length;
@@ -52,9 +52,9 @@ var vector = {
   //   this._z = Math.cos(angleXY) * Math.sin(angleXZ) * length;
   // },
 
-    getAngleXY: function () {
-        return Math.atan(this._y / this._x) || 0;
-    },
+  getAngleXY: function () {
+    return Math.atan(this._y / this._x) || 0;
+  },
 
   // setLength: function (length) {
   //   var angleXY = Number(this.getAngleXY().toFixed(1));
@@ -72,6 +72,10 @@ var vector = {
 
   getLength: function () {
     return Math.sqrt(this._x * this._x + this._y * this._y + this._z * this._z);
+  },
+
+  getForwardVelocity: function () {
+    return Math.sqrt(this._y * this._y + this._z * this._z);
   },
 
   isPositive: function () {
@@ -118,13 +122,13 @@ var vector = {
   //    this._y -= v2.getY();
   // },
 
-  multiplyBy : function (val) {
+  multiplyBy: function (val) {
     this._x *= val;
     this._y *= val;
     this._z *= val;
   },
 
-  multiplyByVector : function (vector) {
+  multiplyByVector: function (vector) {
     this._x *= vector.getX();
     this._y *= vector.getY();
     this._z *= vector.getZ();

@@ -6,6 +6,8 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import Update from './phy/update';
 //import uhF from 'D:/Dem Bois/College/Third Year/Second Semester/Test For Calculations Project/src/phy/update_helperFucntion';
 import StarterSystem from './phy/starterSystem';
+import * as dat from 'dat.gui';
+import vector from './phy/vectore'
 
 /**
  * Base
@@ -163,10 +165,16 @@ gltfloader.load('static/models/TailFan.glb', function (gltf) {
     heli.add(gltf.scene);
 });
 
-heli.position.x = 0;
-heli.position.y = -7400;
-heli.position.z = 0;
-heli.scale.set(100,100,100)
+const heliPositionValues = {
+    x: 0,
+    y: -7400,
+    z: 0,
+};
+
+heli.position.x = heliPositionValues.x;
+heli.position.y = heliPositionValues.y;
+heli.position.z = heliPositionValues.z;
+heli.scale.set(100, 100, 100)
 scene.add(heli);
 
 // gltfloader.load(
@@ -198,13 +206,7 @@ scene.add(heli);
 //     }
 // )
 
-heli.position.x = 1;
-heli.position.y = 1;
-heli.position.z = 1;
-heli.scale.set(100,100,100)
-scene.add(heli);
-
-const floorTexture = textureLoader.load('/static/textures/pavement.jpg', )
+const floorTexture = textureLoader.load('/static/textures/pavement.jpg',)
 
 let materialArray = []
 let texture_ft = new THREE.TextureLoader().load('/static/textures/skybox/sh_ft.png');
@@ -223,7 +225,7 @@ materialArray.push(new THREE.MeshBasicMaterial({ map: texture_lf }));
 
 
 for (let i = 0; i < 6; i++)
-materialArray[i].side = THREE.BackSide;
+    materialArray[i].side = THREE.BackSide;
 
 floorTexture.wrapS = THREE.MirroredRepeatWrapping
 floorTexture.wrapT = THREE.MirroredRepeatWrapping
@@ -278,11 +280,11 @@ window.addEventListener('resize', () => {
     // Update sizes
     sizes.width = window.innerWidth
     sizes.height = window.innerHeight
-    
+
     // Update camera
     camera.aspect = sizes.width / sizes.height
     camera.updateProjectionMatrix()
-    
+
     // Update renderer
     renderer.setSize(sizes.width, sizes.height)
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
@@ -292,17 +294,71 @@ window.addEventListener('resize', () => {
  * Camera
 */
 // Base camera
-const camera = new THREE.PerspectiveCamera(444, ((sizes.width / 1) / (sizes.height / 1)), 0.1, 50000)
-camera.position.x = 0
-camera.position.y = 0
-camera.position.z = 0
-scene.add(camera)
+const camera = new THREE.PerspectiveCamera(50, ((sizes.width / 1) / (sizes.height / 1)), 0.1, 40000);
+scene.add(camera);
+camera.lookAt(heli.position);
+/**
+ * 
+ * Controller
+ */
+// Create a new instance of dat.GUI
+const gui = new dat.GUI();
 
-/*
-// Controls
-const controls = new OrbitControls(camera, canvas)
-controls.enableDamping = true
-*/
+// Create an object to hold the values of the new vector
+const vectorValues = {
+    x: -1000,
+    y: 1500,
+    z: 1000,
+};
+const rotationValues = {
+    x: Math.PI / -12,
+    y: 0,
+    z: 0,
+};
+const heliRotationValues = {
+    x: 0,
+    y: Math.PI / 2,
+    z: 0,
+};
+const heliRotationFolder = gui.addFolder('Helicopter Rotation');
+heliRotationFolder.add(heliRotationValues, 'x', -Math.PI, Math.PI).onChange(updateHeliRotation);
+heliRotationFolder.add(heliRotationValues, 'y', -Math.PI, Math.PI).onChange(updateHeliRotation);
+heliRotationFolder.add(heliRotationValues, 'z', -Math.PI, Math.PI).onChange(updateHeliRotation);
+
+const rotationFolder = gui.addFolder('Camera Rotation');
+rotationFolder.add(rotationValues, 'x', -Math.PI, Math.PI).onChange(updateCameraRotation);
+rotationFolder.add(rotationValues, 'y', -Math.PI, Math.PI).onChange(updateCameraRotation);
+rotationFolder.add(rotationValues, 'z', -Math.PI, Math.PI).onChange(updateCameraRotation);
+
+// Add controls to the GUI for the x, y, and z components of the new vector
+const vectorFolder = gui.addFolder('Camera Position');
+vectorFolder.add(vectorValues, 'x', -10000, 10000).onChange(updateCameraPosition);
+vectorFolder.add(vectorValues, 'y', -10000, 10000).onChange(updateCameraPosition);
+vectorFolder.add(vectorValues, 'z', -10000, 10000).onChange(updateCameraPosition);
+
+// Function to update the camera position based on the new vector values
+function updateCameraPosition() {
+    camera.position.copy(heli.position).add(new THREE.Vector3(vectorValues.x + 1000, vectorValues.y, vectorValues.z + 1000));
+}
+// Add controls to the GUI for the x, y, and z components of the helicopter's position
+const heliPositionFolder = gui.addFolder('Helicopter Position');
+heliPositionFolder.add(heliPositionValues, 'x', -10000, 10000).onChange(updateHeliPosition);
+heliPositionFolder.add(heliPositionValues, 'y', -10000, 10000).onChange(updateHeliPosition);
+heliPositionFolder.add(heliPositionValues, 'z', -10000, 10000).onChange(updateHeliPosition);
+
+// Function to update the helicopter's position based on the GUI controls
+function updateHeliPosition() {
+    heli.position.set(heliPositionValues.x, heliPositionValues.y, heliPositionValues.z);
+    // Update the camera position based on the new helicopter position
+    updateCameraPosition();
+}
+function updateCameraRotation() {
+    camera.rotation.set(rotationValues.x, rotationValues.y, rotationValues.z);
+}
+function updateHeliRotation() {
+    heli.rotation.set(heliRotationValues.x, heliRotationValues.y, heliRotationValues.z);
+}
+
 /**
  * Renderer
  */
@@ -323,17 +379,19 @@ const update = new Update(
     76,
     // the temperature (celuses)
     35,
-    // the sind speed (km/h)
+    // the wind speed (km/h)
     40
 );
 
-let lunch = false, start = false , ground = true;
+let lunch = false,
+    start = false,
+    ground = true;
 const starterSystem = new StarterSystem();
 
 // Add an event listener for the keydown event on the document
-document.addEventListener("keydown", function(event) {
+document.addEventListener("keydown", function (event) {
     // if the helicopter not on the ground then you can fly with it
-    if(!ground){
+    if (!ground) {
         if (event.key == "w") {
             // increase the force which moves the rotor which will reduce the move force for the helicopter to increase
             // ... We can assume that we are increasing the power given to the helicopter
@@ -357,26 +415,30 @@ document.addEventListener("keydown", function(event) {
             update.move_forward();
         }
         if (event.key == "6") {
-            
+            heli.rotateY(Math.PI / 2)
+            rotationValues.y = Math.PI / 2;
         }
         if (event.key == "4") {
-            
+
         }
         if (event.key == "2") {
             // decrease the angel between the X axis and the y axis which will increase the left force and decrease the thrust force
             update.move_backword();
         }
+        if (event.key == "p") {
+            update.auto_pilot();
+        }
     }
-    if(event.key == "c"){
+    if (event.key == "c") {
         // increase the angel which will increase the CL and then the move force for the helicopter
         update.increase_alpha();
     }
-    if(event.key == "x"){
+    if (event.key == "x") {
         // decrease the angel which will decrease the CL and then the move force for the helicopter
         update.decrease_alpha();
     }
     // when it's not on the ground the only thing you can do is lunching the starter system
-    if(event.key == "o"){
+    if (event.key == "o") {
         // start the starter system 
         start = true;
         starterSystem.setTime();
@@ -389,25 +451,20 @@ const tick = () => {
     //controls.update();
 
     // Render
-    renderer.render(scene,camera);
-    
+    renderer.render(scene, camera);
+
     // wait for the model to render befor animating any thing
-    if(model){
+    if (model) {
         // the state where the helicopter is on the ground before starting the starter system
-        if(ground && !lunch && !start){
+        if (ground && !lunch && !start) {
             // call the update on the ground which only depends on the gravity and the reaction force from the earth
             update.update_on_ground();
-            // put the camera on the top behind the helicopter
-            camera.position.x = update.position.getX() + 1500;
-            camera.position.y = update.position.getY() + 1500;
-            camera.position.z = update.position.getZ();
-            camera.lookAt(heli.position.x, heli.position.y, heli.position.z);
         }
         // the state where the starter system is started
-        else if((!lunch && start) || (ground && start)){
+        else if ((!lunch && start) || (ground && start)) {
             let currentTime = Date.now();
             // while the desired time isn't exceeded yet and the velocity of the rotor didn't reach the desired velocity then keep increasing it
-            if(currentTime < starterSystem.endTime && starterSystem.rotorVelocity == starterSystem.finalRotorSpeed !== 0){
+            if (currentTime < starterSystem.endTime && starterSystem.rotorVelocity == starterSystem.finalRotorSpeed !== 0) {
                 starterSystem.rotorVelocity += starterSystem.starterTorque / starterSystem.rotorInertia * (currentTime - starterSystem.startTime) / 1000;
                 // update to the new velocity and W 
                 update.rotorVelocity = starterSystem.rotorVelocity;
@@ -417,43 +474,36 @@ const tick = () => {
                 console.log(update.rotorVelocity);
                 // calculate the force which redused this velocity
                 update.rotorMoveForce = (starterSystem.deltaRotorSpeed / starterSystem.accelerationTime) * starterSystem.rotorInertia;
-                // rotate the fan 
-                upperFan.rotation.y += Math.PI * update.W * update.dTime;
                 // call the function which will calculate the acceleration and velocity for the rotor and give it to the forces
                 update.rotor_update();
             }
             // when reaches the desired rotor velocity then mark the helicopter as lusnhed and reset the otherS
-            else{
+            else {
                 lunch = true;
                 ground = false;
                 start = false;
             }
         }
         // the state after the starter system is started where the helicopter above the ground
-        else{
+        else {
             // update the 
-            if(update.position.getY() < 0 || update.alpha == 0)
+            if (update.position.getY() < -7400 || update.alpha == 0)
                 update.reset_update();
             else
                 update.update_on_fly();
-            
-            upperFan.rotation.y += Math.PI * update.W * update.dTime;
-            
-            heli.position.x = update.position.getX() * 10;
-            heli.position.y = update.position.getY() * 10;
-            heli.position.z = update.position.getZ() * 10;
 
-            camera.position.x = (update.position.getX() * 10) + 1500;
-            camera.position.y = (update.position.getY() * 10) + 1500;
-            camera.position.z = (update.position.getZ() * 10);
-            camera.lookAt(heli.position.x, heli.position.y, heli.position.z);
-            
-            if(model.position.y <= -7550)
-                ground = true;
+            heli.position.x = update.position.getX();
+            heli.position.y = (update.position.getY()) - 7400;
+            heli.position.z = update.position.getZ();
+            scene.add(heli);
         }
     }
-    
-    window.requestAnimationFrame(tick);
+    updateCameraPosition();
+    updateCameraRotation();
+    updateHeliRotation();
+    renderer.render(scene, camera);
+
+    requestAnimationFrame(tick);
 }
 
 tick();
