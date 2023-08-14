@@ -428,6 +428,31 @@ document.addEventListener("keydown", function (event) {
         if (event.key == "p") {
             update.auto_pilot();
         }
+        if (event.key == "e") {
+            update.move_right();
+            update.move_up();
+        }
+        if (event.key == "q") {
+            update.move_up_left();
+        }
+        if (event.key == "9") {
+            update.move_forward_right();
+        }
+        if (event.key == "7") {
+            update.move_forward_left();
+        }
+        if (event.key == "3") {
+            update.move_backward_right();
+        }
+        if (event.key == "1") {
+            update.move_backward_left();
+        }
+        if (event.key == "u") {
+            update.move_up_and_foward();
+        }
+        if (event.key == "j") {
+            update.move_up_and_backward();
+        }
     }
     if (event.key == "c") {
         // increase the angel which will increase the CL and then the move force for the helicopter

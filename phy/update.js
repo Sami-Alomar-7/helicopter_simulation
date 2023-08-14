@@ -38,18 +38,18 @@ class Update {
         this.forces.W = this.W;
         this.rotorVilocity = this.W * this.r;
         this.forces.rotorVilocity = this.rotorVilocity;
-        console.log('rotor d')
-        console.log(this.update.rotorParasiteDrage)
-        console.log('rotor f')
-        console.log(this.forces.rotorMoveForce)
-        console.log('rotor total forces')
-        console.log(this.forces.rotorTotalForces)
-        console.log('rotor acceleration')
-        console.log(this.rotorAcceleration)
-        console.log('rotor w')
-        console.log(this.W)
-        console.log('rotor vilocity')
-        console.log(this.rotorVilocity)
+        // console.log('rotor d')
+        // console.log(this.update.rotorParasiteDrage)
+        // console.log('rotor f')
+        // console.log(this.forces.rotorMoveForce)
+        // console.log('rotor total forces')
+        // console.log(this.forces.rotorTotalForces)
+        // console.log('rotor acceleration')
+        // console.log(this.rotorAcceleration)
+        // console.log('rotor w')
+        // console.log(this.W)
+        // console.log('rotor vilocity')
+        // console.log(this.rotorVilocity)
     }
 
     update_spinner_vilocity(f){

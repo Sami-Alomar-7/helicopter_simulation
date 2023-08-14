@@ -151,6 +151,40 @@ class Update {
             this.forces.forwardBackAngele -= (10 * (Math.PI / 180));
         this.update_on_fly();
     }
+    move_up_left() {
+        this.move_up();
+        this.move_left();
+    }
+
+    move_forward_right() {
+        this.move_forward();
+        this.move_right();
+    }
+
+    move_forward_left() {
+        this.move_forward();
+        this.move_left();
+    }
+
+    move_backward_left() {
+        this.move_backword();
+        this.move_right();
+    }
+
+    move_backward_right() {
+        this.move_backword();
+        this.move_left();
+    }
+
+    move_up_and_foward() {
+        this.move_up();
+        this.move_forward();
+    }
+    move_up_and_backward() {
+        this.move_up();
+        this.move_backword();
+    }
+
     // increase the blade angele and call the update to calculate the new CL
     increase_alpha() {
         this.alpha += Math.PI / 180;
