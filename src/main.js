@@ -151,19 +151,40 @@ const heli = new THREE.Group();
 
 gltfloader.load('static/models/HelicopterBody.glb', function (gltf) {
     model = gltf.scene;
+    model.position.x = -4.025571823120117 ;
+    model.position.y = 1.191272341157781
+    model.position.z=0.03398655354976654;
     heli.add(gltf.scene);
 });
-
+let pivotGroup;
 gltfloader.load('static/models/upperfan.glb', function (gltf) {
     model = gltf.scene;
     upperFan = model;
-    heli.add(gltf.scene);
+
+    // Compute the bounding box of the upperFan to get its center
+    const box = new THREE.Box3().setFromObject(upperFan);
+    const center = box.getCenter(new THREE.Vector3());
+
+    // Create a new group and add the upperFan to this group
+    pivotGroup = new THREE.Group();
+    scene.add(pivotGroup);  // Assuming 'scene' is your main THREE.Scene
+    pivotGroup.add(upperFan);
+
+    // Adjust the position of the upperFan within this group
+    upperFan.position.x -= center.x;
+    upperFan.position.y -= center.y - 4.2;
+    upperFan.position.z -= center.z;
+    // Rotate the pivotGroup, not the upperFan
+    pivotGroup.rotation.y += Math.PI / 4;  // Rotate by 45 degrees as an example
+
+    heli.add(pivotGroup);  // Add the group to the heli, not the upperFan directly
 });
 
-gltfloader.load('static/models/TailFan.glb', function (gltf) {
-    model = gltf.scene;
-    heli.add(gltf.scene);
-});
+
+// gltfloader.load('static/models/TailFan.glb', function (gltf) {
+//     model = gltf.scene;
+//     heli.add(gltf.scene);
+// });
 
 const heliPositionValues = {
     x: 0,
@@ -176,6 +197,8 @@ heli.position.y = heliPositionValues.y;
 heli.position.z = heliPositionValues.z;
 heli.scale.set(100, 100, 100)
 scene.add(heli);
+let initialGroundPositionY = heli.position.y; 
+
 
 // gltfloader.load(
 //     'static/models/street/tree.glb',
@@ -503,6 +526,12 @@ const tick = () => {
             scene.add(heli);
         }
     }
+
+    if (heli.position.y > initialGroundPositionY) {  
+        pivotGroup.rotation.y += 0.5;
+        
+    }
+
     updateCameraPosition();
     updateCameraRotation();
     updateHeliRotation();
