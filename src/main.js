@@ -359,6 +359,10 @@ function updateHeliRotation() {
     heli.rotation.set(heliRotationValues.x, heliRotationValues.y, heliRotationValues.z);
 }
 
+function rotateHeli(){
+    heli.rotation.x  += 0.1;
+}
+
 /**
  * Renderer
  */
