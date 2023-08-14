@@ -359,6 +359,10 @@ function updateHeliRotation() {
     heli.rotation.set(heliRotationValues.x, heliRotationValues.y, heliRotationValues.z);
 }
 
+function rotateHeli(){
+    heli..rotation.z  += 0.1;
+}
+
 /**
  * Renderer
  */
@@ -399,6 +403,7 @@ document.addEventListener("keydown", function (event) {
         }
         if (event.key == "d") {
             // increase the right angel which will decrease the forcse in the x axis and increase it in the -z axis
+            rotateHeli();
             update.move_right();
         }
         if (event.key == "a") {
