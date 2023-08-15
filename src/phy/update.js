@@ -194,99 +194,133 @@ class Update {
     }
     // when the helicopter is flying
     update_on_fly() {
-        // get the appropriate P on this height
         this.update_P(this.position.getY());
-        // reset the forcse to zero then calculate each force and get the total forcse
-        this.forces.reset_forces();
-        this.forces.total_forces();
-        // decrease the right rotation if there were any till it hits zero
-        if (this.forces.right > 0) {
-            if (this.forces.right >= (Math.PI / 18))
-                this.forces.right -= (Math.PI / 18);
-            else
-                this.forces.right = 0;
-        }
-        // increase the left rotation if there were any till it hits zero
-        if (this.forces.left > 0) {
-            if (this.forces.left >= (Math.PI / 18))
-                this.forces.left -= (Math.PI / 18);
-            else
-                this.forces.left = 0;
-        }
-        // for calculating the new acceleration, velocity and posotion, and check for applying some connditions
+        this.calculateForces();
+        this.adjustRotations();
+    
         this.update();
     }
+    
+    calculateForces() {
+        this.forces.reset_forces();
+        this.forces.total_forces();
+    }
+    
+    adjustRotations() {
+        this.decreaseRotation('right');
+        this.increaseRotation('left');
+    }
+    
+    decreaseRotation(direction) {
+        if (this.forces[direction] > 0) {
+            const decrement = Math.min(this.forces[direction], Math.PI / 18);
+            this.forces[direction] -= decrement;
+        }
+    }
+    
+    increaseRotation(direction) {
+        if (this.forces[direction] > 0) {
+            const decrement = Math.min(this.forces[direction], Math.PI / 18);
+            this.forces[direction] -= decrement;
+        }
+    }
+    
     // calculate the acceleration, velocity and the position and apply some main conditions
     update() {
-        // in the automatic mood
         if (this.auto) {
-            // then the total forces on the y axis is too small that means it reaches the heighst level for this CL
-            if (Math.floor(this.forces.totalForces.getY()) <= 1) {
-                this.forces.totalForces.setY(0);
-            }
-            // when the whole total forcse is very small then we the movement is statis
-            if (Math.floor(this.forces.totalForces.getLength()) <= 1) {
-                this.forces.totalForces = vector.create(0, 0, 0);
-            }
-            // when reaches the maximum allowed position then stop moving up
-            if (this.position.getY() >= 10000) {
-                this.forces.totalForces.setY(0);
-            }
+            this.adjustForcesY();
+            this.adjustForcesLength();
+            this.limitPositionY();
         }
-        // print the new total forces
-        console.log('total forces from update')
-        console.log(this.forces.totalForces)
-        // the new acceleration will be the total forcse divided by the total mass
-        // we know:   F = m . a
-        // then:      a = F / m
-        this.acceleration = vector.create(
-            (this.forces.totalForces.getX() / this.totalMass),
-            (this.forces.totalForces.getY() / this.totalMass),
-            (this.forces.totalForces.getZ() / this.totalMass)
-        );
-        if (this.forces.right === 0 && this.forces.left === 0) {
+    
+        this.logForces('total forces from update', this.forces.totalForces);
+    
+        this.calculateAcceleration();
+    
+        if (this.noHorizontalForce()) {
             this.acceleration.setX(0);
             this.velocity.setX(0);
         }
-        // print the new acceleration
-        console.log('acceleration from update')
-        console.log(this.acceleration)
-        // the new velocity will be the previous one plus the acceleration effect to just this frame 
+    
+        this.logForces('acceleration from update', this.acceleration);
+    
+        this.calculateVelocity();
+        this.calculatePosition();
+    
+        if (this.auto && this.isVerticalForceSmall()) {
+            this.moveUpWithoutDrag();
+        }
+    
+        this.logPosition('position from update', this.position);
+    
+        this.forces.position = this.position;
+    }
+    
+    adjustForcesY() {
+        if (Math.floor(this.forces.totalForces.getY()) <= 1) {
+            this.forces.totalForces.setY(0);
+        }
+    }
+    
+    adjustForcesLength() {
+        if (Math.floor(this.forces.totalForces.getLength()) <= 1) {
+            this.forces.totalForces = vector.create(0, 0, 0);
+        }
+    }
+    
+    limitPositionY() {
+        if (this.position.getY() >= 10000) {
+            this.forces.totalForces.setY(0);
+        }
+    }
+    
+    logForces(message, forces) {
+        console.log(message);
+        console.log(forces);
+    }
+    
+    calculateAcceleration() {
+        const invTotalMass = 1 / this.totalMass;
+        this.acceleration = vector.create(
+            this.forces.totalForces.getX() * invTotalMass,
+            this.forces.totalForces.getY() * invTotalMass,
+            this.forces.totalForces.getZ() * invTotalMass
+        );
+    }
+    
+    noHorizontalForce() {
+        return this.forces.right === 0 && this.forces.left === 0;
+    }
+    
+    calculateVelocity() {
         this.velocity = vector.create(
             this.velocity.getX() + this.acceleration.getX() * this.dTime,
             this.velocity.getY() + this.acceleration.getY() * this.dTime,
             this.velocity.getZ() + this.acceleration.getZ() * this.dTime
         );
-        // print the new velocity
-        console.log('velocity from update')
-        console.log(this.velocity)
-        // the new position will be the previous one plus the velocity effect to just this frame
+    }
+    
+    calculatePosition() {
         this.position = vector.create(
             this.position.getX() + this.velocity.getX() * this.dTime,
             this.position.getY() + this.velocity.getY() * this.dTime,
             this.position.getZ() + this.velocity.getZ() * this.dTime
         );
-        // in the automatic mood
-        if (this.auto) {
-            // when the y forcse get very small then we have reached the maximum height for this CL 
-            // so we should stop moving up ... we did not set the velocity to zero because the velocity 
-            // will effect the drage force ... when we set it to zero then the drage force will be zero
-            // then the move force will be the only force that effects the helicopter so that the 
-            // total force will be equal to the move force...and that's wrong
-            if (this.forces.totalForces.getY() < 1) {
-                this.position.setY(this.position.getY() - (this.velocity.getY() * this.dTime));
-            }
-            // // when the forcse for the z axis is too small then the rotaion ends...so set its velocity to zero
-            // if(this.forces.totalForces.getZ() < 0.5){
-            //     this.velocity.setZ(0);
-            // }
-        }
-        // print the new position
-        console.log('position from update')
-        console.log(this.position)
-        // send the new position to the forces cause it will need it for calculating the new gravity acceleration
-        this.forces.position = this.position;
     }
+    
+    isVerticalForceSmall() {
+        return this.forces.totalForces.getY() < 1;
+    }
+    
+    moveUpWithoutDrag() {
+        this.position.setY(this.position.getY() - (this.velocity.getY() * this.dTime));
+    }
+    
+    logPosition(message, position) {
+        console.log(message);
+        console.log(position);
+    }
+    
     // reset the forcse and the acceleration and velocity to zero
     reset_update() {
         this.forces.reset_forces();
