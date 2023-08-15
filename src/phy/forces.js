@@ -141,6 +141,17 @@ class Forces {
         this.totalForces = this.totalForces.add(this.DrageForceX);
         this.totalForces = this.totalForces.add(this.DrageForceY);
     }
+    // Total Forcse
+    total_forces_without_fual() {
+        this.gravity_force();
+        this.drage_force();
+        this.drage_force_X();
+        this.drage_force_Y();
+        // the submission of the total forces
+        this.totalForces = this.totalForces.add(this.gravityForce);
+        this.totalForces = this.totalForces.add(this.DrageForceX);
+        this.totalForces = this.totalForces.add(this.DrageForceY);
+    }
     // Reset each force and the the total forcse
     reset_forces() {
         this.totalForces = vector.create(0, 0, 0);

@@ -7,8 +7,7 @@ import Update from './phy/update';
 //import uhF from 'D:/Dem Bois/College/Third Year/Second Semester/Test For Calculations Project/src/phy/update_helperFucntion';
 import StarterSystem from './phy/starterSystem';
 import * as dat from 'dat.gui';
-import vector from './phy/vectore'
-
+import music from '../static/sounds/Helicopter Sound Effect - Flying 5 minutes.mp3';
 /**
  * Base
  */
@@ -359,16 +358,8 @@ function updateHeliRotation() {
     heli.rotation.set(heliRotationValues.x, heliRotationValues.y, heliRotationValues.z);
 }
 
-/**
- * Renderer
- */
-const renderer = new THREE.WebGLRenderer({
-    canvas: canvas
-})
-renderer.setSize(sizes.width, sizes.height)
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+/////////////////////////////////////////////////////////////
 
-// test
 // initial the forces
 const update = new Update(
     // the rotor length (m)
@@ -382,11 +373,137 @@ const update = new Update(
     // the wind speed (km/h)
     40
 );
-
+// initial states
 let lunch = false,
     start = false,
-    ground = true;
+    ground = true,
+    stopSound = false,
+    musicSound = false;
 const starterSystem = new StarterSystem();
+// Add Changeable Variables To The GUI Screen
+let rotorLengthValue = {
+    r: 3.84
+};
+
+let heliMassValue = {
+    Helicopter_Mass: 680
+}
+
+let fuelMassValue = {
+    Fuel_Mass: 76
+}
+
+let temperatureValue = {
+    Temperature: 35
+}
+
+let windSpeedValue = {
+    Wind_Speed: 40
+}
+
+let rotorMassValue = {
+    Rotor_Mass: 14
+}
+
+let AshapeValue = {
+    Heli_Shape: 46.2
+}
+
+let rotorAshapeValue = {
+    Rotor_Shape: 1.7
+}
+
+// Add controls for ROTOR LENGTH to be changeable in the run
+const rotorLengthFolder = gui.addFolder('Rotor Length');
+rotorLengthFolder.add(rotorLengthValue, 'r', -19.3, 19.3).onChange(rotorLengthFunction)
+// Rotor length change function
+function rotorLengthFunction() {
+    update.r = rotorLengthValue.r;
+}
+
+// Add controls for HELICOPTER MASS to be changeable in the run
+const heliMassFolder = gui.addFolder('Helicopter Mass');
+heliMassFolder.add(heliMassValue, 'Helicopter_Mass', -3401, 3401).onChange(heliMassFunction)
+// Helicopter mass change function
+function heliMassFunction() {
+    update.heliMass = heliMassValue.Helicopter_Mass;
+}
+
+// Add controls for Fuel MASS to be changeable in the run
+const fuelMassFolder = gui.addFolder('Fuel Mass');
+fuelMassFolder.add(fuelMassValue, 'Fuel_Mass', -381, 381).onChange(fuelMassFunction)
+// Fuel mass change function
+function fuelMassFunction() {
+    update.fualMass = fuelMassValue.Fuel_Mass;
+}
+
+// Add controls for TEMPERATURE to be changeable in the run
+const temperatureFolder = gui.addFolder('Temeperature');
+temperatureFolder.add(temperatureValue, 'Temperature', -176, 176).onChange(temperatureFunction)
+// Temperature change function
+function temperatureFunction() {
+    update.temperature = temperatureValue.Temperature;
+}
+
+// Add controls for WIND SPEED to be changeable in the run
+const windSpeedFolder = gui.addFolder('Wind Speed');
+windSpeedFolder.add(windSpeedValue, 'Wind_Speed', -201, 201).onChange(windSpeedFunction)
+// Wind speed change function
+function windSpeedFunction() {
+    update.windSpeed = windSpeedValue.Wind_Speed;
+}
+
+// Add controls for ROTOR MASS to be changeable in the run
+const rotorMassFolder = gui.addFolder('Rotor Mass');
+rotorMassFolder.add(rotorMassValue, 'Rotor_Mass', -71, 71).onChange(rotorMassFunction)
+// Rotor mass change function
+function rotorMassFunction() {
+    update.rotorMass = rotorMassValue.Rotor_Mass;
+}
+
+// Add controls for HELICOPTER SHAPE to be changeable in the run
+const AshapeFolder = gui.addFolder('Helicopter Shape');
+AshapeFolder.add(AshapeValue, 'Heli_Shape', -232, 232).onChange(AshapeFunction)
+// Helicopter shape change function
+function AshapeFunction() {
+    update.forces.Ashape = AshapeValue.Heli_Shape;
+}
+
+// Add controls for ROTOR SHAPE to be changeable in the run
+const rotorAshapeFolder = gui.addFolder('Rotor Shape');
+rotorAshapeFolder.add(rotorAshapeValue, 'Rotor_Shape', -8.5, 8.5).onChange(rotorAshapeFunction)
+// Rotor shape change function
+function rotorAshapeFunction() {
+    update.forces.rotorAshape = rotorAshapeValue.Rotor_Shape;
+}
+
+function playSound() {
+    // SOUND CHECK
+    // create an AudioListener and add it to the camera
+    const listener = new THREE.AudioListener();
+    camera.add(listener);
+
+    // create a global audio source
+    const sound = new THREE.Audio(listener);
+
+    // load a sound and set it as the Audio object's buffer
+    const audioLoader = new THREE.AudioLoader();
+    audioLoader.load(music, function (buffer) {
+        sound.setBuffer(buffer);
+        sound.setLoop(true);
+        sound.setVolume(0.5);
+        sound.play();
+    });
+}
+
+/**
+ * Renderer
+ */
+const renderer = new THREE.WebGLRenderer({
+    canvas: canvas
+})
+renderer.setSize(sizes.width, sizes.height)
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 
 // Add an event listener for the keydown event on the document
 document.addEventListener("keydown", function (event) {
@@ -439,6 +556,7 @@ document.addEventListener("keydown", function (event) {
     }
     // when it's not on the ground the only thing you can do is lunching the starter system
     if (event.key == "o") {
+        playSound();
         // start the starter system 
         start = true;
         starterSystem.setTime();
@@ -489,9 +607,11 @@ const tick = () => {
             // update the 
             if (update.position.getY() < -7400 || update.alpha == 0)
                 update.reset_update();
-            else
+            else {
+                if (!update.auto)
+                    update.rotor_update();
                 update.update_on_fly();
-
+            }
             heli.position.x = update.position.getX();
             heli.position.y = (update.position.getY()) - 7400;
             heli.position.z = update.position.getZ();
@@ -502,7 +622,6 @@ const tick = () => {
     updateCameraRotation();
     updateHeliRotation();
     renderer.render(scene, camera);
-
     requestAnimationFrame(tick);
 }
 

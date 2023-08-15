@@ -23,6 +23,7 @@ class Update {
         this.totalMass = heliMass + fualMass + this.rotorMass;
         this.update_angle = 0;
         this.dTime = 0.02;
+        this.massFlowRate = 2.03;
         this.forces = new Forces(
             this,
             r,
@@ -77,8 +78,8 @@ class Update {
         }
         else {
             if (this.rotorVelocity >= 0) {
-                this.rotorAcceleration += -1;
-                this.W += this.rotorAcceleration * this.dTime;
+                this.rotorAcceleration -= 0.5;
+                this.W = this.rotorAcceleration * this.dTime;
                 this.rotorVelocity = this.W * this.r;
             } else {
                 this.rotorAcceleration = 0;
@@ -130,25 +131,27 @@ class Update {
     // increase the angele between the x axis and the y axis which will decrease the left force and increase the thrust force
     move_forward() {
         if (this.forces.forwardBackAngele < Math.PI / 2)
-            this.forces.forwardBackAngele += (10 * (Math.PI / 180));
+            this.forces.forwardBackAngele += (Math.PI / 18);
         this.update_on_fly();
     }
     // increase the right angele which will decrease the forcse in the x axis and increase it in the -z axis
     move_right() {
-        this.forces.right = (Math.PI / 3);
+        if (this.forces.right < (Math.PI / 6))
+            this.forces.right += (Math.PI / 36);
         this.forces.left = 0;
         this.update_on_fly();
     }
     // increase the left angele which will decrease the forcse in the x axis and increase it in the z axis
     move_left() {
-        this.forces.left = (Math.PI / 3);
+        if (this.forces.left < (Math.PI / 6))
+            this.forces.left += (Math.PI / 36);
         this.forces.right = 0;
         this.update_on_fly();
     }
     // decrease the angele between the x axis and the y axis which will increase the left force and decrease the thrust force
     move_backword() {
         if (this.forces.forwardBackAngele > (- Math.PI / 2))
-            this.forces.forwardBackAngele -= (10 * (Math.PI / 180));
+            this.forces.forwardBackAngele -= (Math.PI / 18);
         this.update_on_fly();
     }
     // increase the blade angele and call the update to calculate the new CL
@@ -179,8 +182,8 @@ class Update {
                     this.currentP = this.P[j - 1].p;
     }
     // calculate the new fual mass passed on the decreasing in each frame
-    update_fual(dTime) {
-        this.fualMass = Math.max(this.fualMass - (this.massFlowRate * dTime), 0);
+    update_fual() {
+        this.fualMass = Math.max(this.fualMass - (this.massFlowRate * this.dTime), 0);
     }
     // when the helicopter is on the ground
     update_on_ground() {
@@ -195,20 +198,27 @@ class Update {
     update_on_fly() {
         // get the appropriate P on this height
         this.update_P(this.position.getY());
-        // reset the forcse to zero then calculate each force and get the total forcse
+        // update the fual mass whil its flying
+        this.update_fual();
+        // reset the forcse to zero 
         this.forces.reset_forces();
-        this.forces.total_forces();
+        if (this.fualMass)
+            // calculate each force and get the total forcse
+            this.forces.total_forces();
+        else
+            // calculate the drage forces which will be the only effect on the helicopter and get the total forces
+            this.forces.total_forces_without_fual();
         // decrease the right rotation if there were any till it hits zero
         if (this.forces.right > 0) {
-            if (this.forces.right >= (Math.PI / 18))
-                this.forces.right -= (Math.PI / 18);
+            if (this.forces.right >= (Math.PI / 180))
+                this.forces.right -= (Math.PI / 180);
             else
                 this.forces.right = 0;
         }
         // increase the left rotation if there were any till it hits zero
         if (this.forces.left > 0) {
-            if (this.forces.left >= (Math.PI / 18))
-                this.forces.left -= (Math.PI / 18);
+            if (this.forces.left >= (Math.PI / 180))
+                this.forces.left -= (Math.PI / 180);
             else
                 this.forces.left = 0;
         }
@@ -220,9 +230,9 @@ class Update {
         // in the automatic mood
         if (this.auto) {
             // then the total forces on the y axis is too small that means it reaches the heighst level for this CL
-            if (Math.floor(this.forces.totalForces.getY()) <= 1) {
-                this.forces.totalForces.setY(0);
-            }
+            // if (Math.floor(this.forces.totalForces.getY()) <= 1) {
+            //     this.forces.totalForces.setY(0);
+            // }
             // when the whole total forcse is very small then we the movement is statis
             if (Math.floor(this.forces.totalForces.getLength()) <= 1) {
                 this.forces.totalForces = vector.create(0, 0, 0);
@@ -274,6 +284,13 @@ class Update {
             // total force will be equal to the move force...and that's wrong
             if (this.forces.totalForces.getY() < 1) {
                 this.position.setY(this.position.getY() - (this.velocity.getY() * this.dTime));
+                if (this.position.getY() < 3 && this.alpha < 0) {
+                    this.acceleration.setY(0);
+                    this.velocity.setY(0)
+                }
+            }
+            if (this.forces.totalForces.getY() < 0 && this.position.getY() > 0 && this.alpha < 0) {
+                this.position.setY(this.position.getY() + (this.velocity.getY() * this.dTime));
             }
             // // when the forcse for the z axis is too small then the rotaion ends...so set its velocity to zero
             // if(this.forces.totalForces.getZ() < 0.5){

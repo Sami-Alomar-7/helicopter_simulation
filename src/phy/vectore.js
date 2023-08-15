@@ -75,7 +75,7 @@ var vector = {
   },
 
   getForwardVelocity: function () {
-    return Math.sqrt(this._y * this._y + this._z * this._z);
+    return Math.sqrt((this._y > 0) ? (this._y * this._y) : 0 + (this._z > 0) ? (this._z * this._z) : 0);
   },
 
   isPositive: function () {
