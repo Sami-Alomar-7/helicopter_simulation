@@ -48,7 +48,8 @@ body {
   background-color: rgba(0, 0, 0, 0.282);
   border-radius: 100px;
   width: 190px;
-  height: 190px;
+  height: 200px;
+  padding-right:10px
 }
 
 .lil-gui.root {

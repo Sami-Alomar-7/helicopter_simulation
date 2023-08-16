@@ -73,22 +73,23 @@ const b13 = block_13();
 const b14 = block_14();
 const b15 = block_15();
 const b16 = block_16();
-scene.add(b7);
-scene.add(b8);
-scene.add(b9);
-scene.add(b10);
-scene.add(b11);
-scene.add(b13);
-scene.add(b14);
-scene.add(b15);
-scene.add(b16);
-scene.add(b1);
-scene.add(b3);
-scene.add(b2);
-scene.add(b4);
-scene.add(b5);
-scene.add(b6);
-scene.add(b0);
+const environment = new THREE.Group();
+environment.add(b7);
+environment.add(b8);
+environment.add(b9);
+environment.add(b10);
+environment.add(b11);
+environment.add(b13);
+environment.add(b14);
+environment.add(b15);
+environment.add(b1);
+environment.add(b3);
+environment.add(b2);
+environment.add(b4);
+environment.add(b5);
+environment.add(b6);
+environment.add(b0);
+scene.add(environment);
 
 const gltfloader = new GLTFLoader();
 
@@ -102,8 +103,7 @@ gltfloader.load(
         s.position.z = -4500;
         s.position.y = -7300;
         s.scale.set(450, 55, 110);
-
-        scene.add(s);
+        environment.add(s);
         console.log(s);
     },
 );
@@ -119,7 +119,7 @@ gltfloader.load(
         s.position.x = -4000;
         s.scale.set(450, 55, 110);
         s.rotation.y = Math.PI / 2;
-        scene.add(s);
+        environment.add(s);
     },
 );
 
@@ -136,7 +136,7 @@ gltfloader.load(
         s.scale.set(450, 55, 110);
 
         s.rotation.y = Math.PI / 2;
-        scene.add(s);
+        environment.add(s);
         console.log(s);
     },
 );
@@ -152,7 +152,7 @@ gltfloader.load(
         s.position.y = -7300;
         s.scale.set(450, 55, 110);
 
-        scene.add(s);
+        environment.add(s);
         console.log(s);
     },
 );
@@ -257,11 +257,11 @@ const geometry = new THREE.BoxGeometry(25000, 15000, 25000);
 console.log(geometry.attributes);
 const material = new THREE.MeshBasicMaterial({ map: floorTexture });
 const mesh = new THREE.Mesh(geometry, materialArray);
-scene.add(mesh);
+environment.add(mesh);
 material.side = THREE.BackSide;
 
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
-scene.add(ambientLight);
+environment.add(ambientLight);
 
 const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6);
 directionalLight.castShadow = true;
@@ -272,8 +272,7 @@ directionalLight.shadow.camera.top = 7;
 directionalLight.shadow.camera.right = 7;
 directionalLight.shadow.camera.bottom = -7;
 directionalLight.position.set(5, 5, 5);
-scene.add(directionalLight);
-
+environment.add(directionalLight);
 /**
  * Sizes
  */
@@ -529,17 +528,23 @@ function pitchForward() {
 }
 
 function yawRight() {
-    const angle = -0.1;
     const axis = new THREE.Vector3(0, 1, 0);
-    const quaternion = new THREE.Quaternion().setFromAxisAngle(axis, angle);
-    heliQuaternion.multiply(quaternion);
+    const heliAngle = -0.01;
+    const heliQuaternion = new THREE.Quaternion().setFromAxisAngle(axis, heliAngle);
+    heliQuaternion.multiply(heliQuaternion);
+    const environmentAngle = +0.01;
+    const environmentQuaternion = new THREE.Quaternion().setFromAxisAngle(axis, environmentAngle);
+    environment.quaternion.multiply(environmentQuaternion);
 }
 
 function yawLeft() {
-    const angle = +0.1;
     const axis = new THREE.Vector3(0, 1, 0);
-    const quaternion = new THREE.Quaternion().setFromAxisAngle(axis, angle);
-    heliQuaternion.multiply(quaternion);
+    const heliAngle = +0.01;
+    const heliQuaternion = new THREE.Quaternion().setFromAxisAngle(axis, heliAngle);
+    heliQuaternion.multiply(heliQuaternion);
+    const environmentAngle = -0.01;
+    const environmentQuaternion = new THREE.Quaternion().setFromAxisAngle(axis, environmentAngle);
+    environment.quaternion.multiply(environmentQuaternion);
 }
 
 /**
@@ -709,6 +714,7 @@ document.addEventListener("keydown", function (event) {
         if (event.key == "4") {
             yawLeft();
         }
+
         if (event.key == "2") {
             // decrease the angel between the X axis and the y axis which will increase the left force and decrease the thrust force
             update.move_backword();
