@@ -216,14 +216,6 @@ class Update {
             // calculate the drage forces which will be the only effect on the helicopter and get the total forces
             this.forces.total_forces_without_fual();
     }
-    // decrease the right rotation if there were any till it hits zero
-    // if (this.forces.right > 0) {
-    //     if (this.forces.right >= (Math.PI / 180))
-    //         this.forces.right -= (Math.PI / 180);
-    //     else
-    //         this.forces.right = 0;
-    //     this.forces.total_forces();
-    // }
 
     adjustRotations() {
         this.decreaseRotation('right');
@@ -252,6 +244,11 @@ class Update {
             this.limitPositionY();
         }
 
+        if (this.forces.forwardBackAngele <= 0) {
+            if (this.velocity.getZ() < 0)
+                this.velocity.setZ(0);
+        }
+
         this.logForces('total forces from update', this.forces.totalForces);
 
         this.calculateAcceleration();
@@ -264,6 +261,9 @@ class Update {
         this.logForces('acceleration from update', this.acceleration);
 
         this.calculateVelocity();
+
+        this.logForces('velocity from update', this.velocity);
+
         this.calculatePosition();
 
         if (this.auto && this.isVerticalForceSmall()) {

@@ -453,9 +453,7 @@ function updateHeliRotation() {
         heliRotationValues.z,
     );
 }
-let rightRotationAngle = 0;
-let leftRotationAngle = 0;
-let angle = 0;
+let rotationAngle = 0;
 let rotationSpeed = Math.PI / 36;
 let rotationDirection = 0;
 const rotationDecay = 0.01;
@@ -481,48 +479,52 @@ const stopRollLeft = () => {
 }
 
 const Rotate = () => {
-    if (rightRotationAngle < Math.PI / 6) {
+    if (rotationAngle < Math.PI / 6) {
         const rotationAxis = new THREE.Vector3(rotationDirection, 0, 0);
         const rotationQuaternionDelta = new THREE.Quaternion().setFromAxisAngle(rotationAxis, rotationSpeed);
         heliQuaternion.multiply(rotationQuaternionDelta);
         // Update the rotation angle
-        rightRotationAngle += rotationSpeed;
+        rotationAngle += rotationSpeed;
     }
 }
 
 const StopRotate = () => {
     const decayInterval = setInterval(() => {
-        if (rightRotationAngle > 0) {
+        if (rotationAngle > 0) {
             const rotationAxis = new THREE.Vector3(rotationDirection, 0, 0);
             const rotationQuaternionDelta = new THREE.Quaternion().setFromAxisAngle(rotationAxis, -rotationDecay);
             heliQuaternion.multiply(rotationQuaternionDelta);
             // Update the rotation angle
-            rightRotationAngle -= rotationDecay;
+            rotationAngle -= rotationDecay;
         } else {
             // Reset the rotation
-            heliQuaternion.identity();
-            fixHeliRotation();
-            rightRotationAngle = 0;
+            //heliQuaternion.identity();
+            // fixHeliRotation();
+            rotationAngle = 0;
             clearInterval(decayInterval);
         }
     }, 10);
 }
 
-function pitchBackward(backwardAngle) {
-    if (backwardAngle > (- Math.PI / 4) + (Math.PI / 36) && backwardAngle <= 0) {
-        const angle = backwardAngle / 8;
-        const axis = new THREE.Vector3(0, 0, 1);
-        const quaternion = new THREE.Quaternion().setFromAxisAngle(axis, -angle);
-        heliQuaternion.multiply(quaternion);
+let rotationAngleFB = 0;
+
+function pitchBackward() {
+    if (rotationAngleFB > (- Math.PI / 4) + (Math.PI / 36)) {
+        const rotationAxis = new THREE.Vector3(0, 0, 1);
+        const rotationQuaternionDelta = new THREE.Quaternion().setFromAxisAngle(rotationAxis, rotationSpeed);
+        heliQuaternion.multiply(rotationQuaternionDelta);
+        // Update the rotation angle
+        rotationAngleFB -= rotationSpeed;
     }
 }
 
-function pitchForward(forwardAngle) {
-    if (forwardAngle < (Math.PI / 4) - (Math.PI / 36) && forwardAngle >= 0) {
-        const angle = forwardAngle / 8;
-        const axis = new THREE.Vector3(0, 0, 1);
-        const quaternion = new THREE.Quaternion().setFromAxisAngle(axis, -angle);
-        heliQuaternion.multiply(quaternion);
+function pitchForward() {
+    if (rotationAngleFB <= (Math.PI / 4) - (Math.PI / 36)) {
+        const rotationAxis = new THREE.Vector3(0, 0, -1);
+        const rotationQuaternionDelta = new THREE.Quaternion().setFromAxisAngle(rotationAxis, rotationSpeed);
+        heliQuaternion.multiply(rotationQuaternionDelta);
+        // Update the rotation angle
+        rotationAngleFB += rotationSpeed;
     }
 }
 
@@ -699,7 +701,7 @@ document.addEventListener("keydown", function (event) {
         if (event.key == "8") {
             // increase the angel between the X axis and the y axis which will decrease the left force and increase the thrust force
             update.move_forward();
-            pitchForward(update.forces.forwardBackAngele);
+            pitchForward();
         }
         if (event.key == "6") {
             yawRight();
@@ -710,7 +712,7 @@ document.addEventListener("keydown", function (event) {
         if (event.key == "2") {
             // decrease the angel between the X axis and the y axis which will increase the left force and decrease the thrust force
             update.move_backword();
-            pitchBackward(update.forces.forwardBackAngele);
+            pitchBackward();
         }
         if (event.key == "p") {
             update.auto_pilot();
