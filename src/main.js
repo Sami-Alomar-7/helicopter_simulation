@@ -159,11 +159,14 @@ gltfloader.load(
 let model, upperFan;
 const heli = new THREE.Group();
 const heliQuaternion = new THREE.Quaternion();
-const initialRotation = new THREE.Quaternion().setFromAxisAngle(
-    new THREE.Vector3(0, 1, 0),
-    Math.PI / 2,
-);
-heliQuaternion.multiply(initialRotation);
+const fixHeliRotation = () => {
+    const initialRotation = new THREE.Quaternion().setFromAxisAngle(
+        new THREE.Vector3(0, 1, 0),
+        Math.PI / 2,
+    );
+    heliQuaternion.multiply(initialRotation);
+}
+fixHeliRotation();
 gltfloader.load("static/models/HelicopterBody.glb", function (gltf) {
     model = gltf.scene;
     model.position.x = -4.025571823120117;
@@ -450,33 +453,63 @@ function updateHeliRotation() {
         heliRotationValues.z,
     );
 }
-
-function rollLeft(increase) {
-    if (increase)
-        angle = -Math.PI / 36;
-    else if (!increase)
-        angle = Math.PI / 36;
-    const axis = new THREE.Vector3(1, 0, 0);
-    const quaternion = new THREE.Quaternion().setFromAxisAngle(axis, angle);
-    heliQuaternion.multiply(quaternion);
-}
-let rotationAngle = 0; // Current rotation angle
-
+let rightRotationAngle = 0;
+let leftRotationAngle = 0;
 let angle = 0;
 let rotationSpeed = Math.PI / 36;
-let rotationDirection = 1;
+let rotationDirection = 0;
+const rotationDecay = 0.01;
 
 const rollRight = () => {
     rotationDirection = 1;
-    angle += rotationSpeed;
+    Rotate();
 };
 
 const stopRollRight = () => {
+    rotationDirection = 1;
+    StopRotate();
+}
+
+const rollLeft = () => {
     rotationDirection = -1;
+    Rotate();
+};
+
+const stopRollLeft = () => {
+    rotationDirection = -1;
+    StopRotate();
+}
+
+const Rotate = () => {
+    if (rightRotationAngle < Math.PI / 6) {
+        const rotationAxis = new THREE.Vector3(rotationDirection, 0, 0);
+        const rotationQuaternionDelta = new THREE.Quaternion().setFromAxisAngle(rotationAxis, rotationSpeed);
+        heliQuaternion.multiply(rotationQuaternionDelta);
+        // Update the rotation angle
+        rightRotationAngle += rotationSpeed;
+    }
+}
+
+const StopRotate = () => {
+    const decayInterval = setInterval(() => {
+        if (rightRotationAngle > 0) {
+            const rotationAxis = new THREE.Vector3(rotationDirection, 0, 0);
+            const rotationQuaternionDelta = new THREE.Quaternion().setFromAxisAngle(rotationAxis, -rotationDecay);
+            heliQuaternion.multiply(rotationQuaternionDelta);
+            // Update the rotation angle
+            rightRotationAngle -= rotationDecay;
+        } else {
+            // Reset the rotation
+            heliQuaternion.identity();
+            fixHeliRotation();
+            rightRotationAngle = 0;
+            clearInterval(decayInterval);
+        }
+    }, 10);
 }
 
 function pitchBackward(backwardAngle) {
-    if (backwardAngle > - Math.PI / 2 && backwardAngle <= 0) {
+    if (backwardAngle > (- Math.PI / 4) + (Math.PI / 36) && backwardAngle <= 0) {
         const angle = backwardAngle / 8;
         const axis = new THREE.Vector3(0, 0, 1);
         const quaternion = new THREE.Quaternion().setFromAxisAngle(axis, -angle);
@@ -485,7 +518,7 @@ function pitchBackward(backwardAngle) {
 }
 
 function pitchForward(forwardAngle) {
-    if (forwardAngle < Math.PI / 2 && forwardAngle >= 0) {
+    if (forwardAngle < (Math.PI / 4) - (Math.PI / 36) && forwardAngle >= 0) {
         const angle = forwardAngle / 8;
         const axis = new THREE.Vector3(0, 0, 1);
         const quaternion = new THREE.Quaternion().setFromAxisAngle(axis, -angle);
@@ -703,6 +736,9 @@ document.addEventListener('keyup', (event) => {
     if (event.key == 'd') {
         stopRollRight();
     }
+    if (event.key == 'a') {
+        stopRollLeft()
+    }
 })
 
 // Animate for each frame
@@ -762,45 +798,13 @@ const updateFlyingState = () => {
         update.reset_update();
     } else {
         update.update_on_fly();
-        //    
-        if (angle * rotationDirection !== 0) {
-            const quaternion = new THREE.Quaternion().setFromAxisAngle(
-                new THREE.Vector3(1, 0, 0),
-                angle * rotationDirection
-            );
-            heliQuaternion.multiply(quaternion);
-            if (angle * rotationDirection < 0)
-                angle -= rotationSpeed;
-        }
-        console.log('----------------------------------')
-        console.log('angle')
-        console.log(angle)
-        // updateRolls();
+
         heli.position.x = update.position.getX();
         heli.position.y = update.position.getY() - 7400;
         heli.position.z = update.position.getZ();
         scene.add(heli);
     }
 };
-
-const balanceTheRotation = () => {
-    if (angle != 0)
-        rollRight(false, 0);
-
-    // if (update.forces.left >= Math.PI / 36)
-    //     rollLeft(false);
-    // if (!balance && update.forces.left == 0) {
-    //     rollLeft(false);
-    //     balance = true;
-    // }
-}
-
-const updateRolls = () => {
-    if (update.forces.right >= 0 && update.forces.right < Math.PI / 6)
-        rollRight(update.forces.right);
-    if (update.forces.left >= 0 && update.forces.left < Math.PI / 6)
-        rollLeft(update.forces.left);
-}
 
 const updatePivotRotation = () => {
     if (update.W > 0) {

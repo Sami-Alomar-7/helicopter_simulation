@@ -130,7 +130,7 @@ class Update {
     }
     // increase the angele between the x axis and the y axis which will decrease the left force and increase the thrust force
     move_forward() {
-        if (this.forces.forwardBackAngele < (Math.PI / 2) - (Math.PI / 36))
+        if (this.forces.forwardBackAngele < (Math.PI / 4) - (Math.PI / 36))
             this.forces.forwardBackAngele += (Math.PI / 36);
         this.update_on_fly();
     }
@@ -151,7 +151,7 @@ class Update {
 
     // decrease the angele between the x axis and the y axis which will increase the left force and decrease the thrust force
     move_backword() {
-        if (this.forces.forwardBackAngele > (- Math.PI / 2) + (Math.PI / 36))
+        if (this.forces.forwardBackAngele > (- Math.PI / 4) + (Math.PI / 36))
             this.forces.forwardBackAngele -= (Math.PI / 36);
         this.update_on_fly();
     }
