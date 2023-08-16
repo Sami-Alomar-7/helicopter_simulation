@@ -527,20 +527,20 @@ function pitchForward(forwardAngle) {
 
 function yawRight() {
     const axis = new THREE.Vector3(0, 1, 0);
-    const heliAngle = -0.1;
+    const heliAngle = -0.01;
     const heliQuaternion = new THREE.Quaternion().setFromAxisAngle(axis, heliAngle);
     heliQuaternion.multiply(heliQuaternion);
-    const environmentAngle = +0.1;
+    const environmentAngle = +0.01;
     const environmentQuaternion = new THREE.Quaternion().setFromAxisAngle(axis, environmentAngle);
     environment.quaternion.multiply(environmentQuaternion);
 }
 
 function yawLeft() {
     const axis = new THREE.Vector3(0, 1, 0);
-    const heliAngle = +0.1;
+    const heliAngle = +0.01;
     const heliQuaternion = new THREE.Quaternion().setFromAxisAngle(axis, heliAngle);
     heliQuaternion.multiply(heliQuaternion);
-    const environmentAngle = -0.1;
+    const environmentAngle = -0.01;
     const environmentQuaternion = new THREE.Quaternion().setFromAxisAngle(axis, environmentAngle);
     environment.quaternion.multiply(environmentQuaternion);
 }
