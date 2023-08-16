@@ -312,16 +312,50 @@ camera.lookAt(heli.position);
 // // Create a new instance of dat.GUI
 const gui = new dat.GUI();
 const lilGui = new lil.GUI({ injectStyles: false });
-
-const myObject = {
-    Angle: 10,
-    Status: "flying",
-    Speed: 1,
+// initial the forces
+const update = new Update(
+    // the rotor length (m)
+    3.84,
+    // the helicopter mass (Kg)
+    680,
+    // the fual mass (Kg)
+    76,
+    // the temperature (celuses)
+    35,
+    // the wind speed (km/h)
+    40,
+);
+let myObject = {
+    RotorSpeed: 0,
+    AngleOfAttak: 0,
+    Height: 0,
+    ForwardSpeed: 0,
+    RightSpeed: 0,
+    UpSpeed: 0,
+    Roll: 0,
+    Yaw: 0,
+    Pitch: 0,
+    Status: "Ground",
 };
-lilGui.add(myObject, "Angle"); // Text Field
-lilGui.add(myObject, "Status"); // Number Field
-lilGui.add(myObject, "Speed");
-lilGui.title('Ironic Dude')
+let controllers = [];
+const updateGUI = (statue) => {
+    myObject.RotorSpeed = Math.floor(update.rotorVelocity);
+    myObject.AngleOfAttak = update.alpha;
+    myObject.Height = Math.floor(update.position.getY());
+    myObject.ForwardSpeed = Math.floor(update.velocity.getZ());
+    myObject.RightSpeed = Math.floor(update.velocity.getX());
+    myObject.UpSpeed = Math.floor(update.velocity.getY());
+    if (update.forces.right > 0)
+        myObject.Roll = update.forces.right;
+    else if (update.forces.left > 0)
+        myObject.Roll = update.forces.left;
+    else if (update.forces.right == 0 && update.forces.left == 0)
+        myObject.Roll = 0;
+    myObject.Pitch = update.forces.forwardBackAngele;
+    myObject.Status = statue;
+    // Call the GUI update function for each property
+    controllers.forEach((controller) => controller.updateDisplay());
+};
 // Create an object to hold the values of the new vector
 const vectorValues = {
     x: -1000,
@@ -417,8 +451,6 @@ function updateHeliRotation() {
     );
 }
 
-let angle;
-
 function rollLeft(increase) {
     if (increase)
         angle = -Math.PI / 36;
@@ -428,15 +460,19 @@ function rollLeft(increase) {
     const quaternion = new THREE.Quaternion().setFromAxisAngle(axis, angle);
     heliQuaternion.multiply(quaternion);
 }
+let rotationAngle = 0; // Current rotation angle
 
-function rollRight(increase) {
-    if (increase)
-        angle = Math.PI / 36;
-    else if (!increase)
-        angle = -Math.PI / 36;
-    const axis = new THREE.Vector3(1, 0, 0);
-    const quaternion = new THREE.Quaternion().setFromAxisAngle(axis, angle);
-    heliQuaternion.multiply(quaternion);
+let angle = 0;
+let rotationSpeed = Math.PI / 36;
+let rotationDirection = 1;
+
+const rollRight = () => {
+    rotationDirection = 1;
+    angle += rotationSpeed;
+};
+
+const stopRollRight = () => {
+    rotationDirection = -1;
 }
 
 function pitchBackward(backwardAngle) {
@@ -480,19 +516,7 @@ const renderer = new THREE.WebGLRenderer({
 renderer.setSize(sizes.width, sizes.height);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-// initial the forces
-const update = new Update(
-    // the rotor length (m)
-    3.84,
-    // the helicopter mass (Kg)
-    680,
-    // the fual mass (Kg)
-    76,
-    // the temperature (celuses)
-    35,
-    // the wind speed (km/h)
-    40,
-);
+
 // initial states
 let lunch = false,
     start = false,
@@ -614,7 +638,7 @@ function playSound() {
         sound.play();
     });
 }
-let balance = true;
+
 // Add an event listener for the keydown event on the document
 document.addEventListener("keydown", function (event) {
     // if the helicopter not on the ground then you can fly with it
@@ -627,14 +651,12 @@ document.addEventListener("keydown", function (event) {
         if (event.key == "d") {
             // increase the right angel which will decrease the forcse in the x axis and increase it in the -z axis
             update.move_right();
-            rollRight(true);
-            balance = false;
+            rollRight();
         }
         if (event.key == "a") {
             // increase the left angel which will decrease the forcse in the x axis and increase it in the z axis
             update.move_left();
-            rollLeft(true);
-            balance = false;
+            rollLeft();
         }
         if (event.key == "s") {
             // decrease the force which moves the rotor which will reduce the move force for the helicopter to decrease
@@ -677,6 +699,11 @@ document.addEventListener("keydown", function (event) {
         starterSystem.setTime();
     }
 });
+document.addEventListener('keyup', (event) => {
+    if (event.key == 'd') {
+        stopRollRight();
+    }
+})
 
 // Animate for each frame
 const tick = () => {
@@ -686,10 +713,13 @@ const tick = () => {
     if (model) {
         if (ground && !lunch && !start) {
             update.update_on_ground();
+            updateGUI("Ground")
         } else if ((!lunch && start) || (ground && start)) {
             updateStarterSystem();
+            updateGUI("Ground")
         } else {
             updateFlyingState();
+            updateGUI("Flying")
         }
     }
 
@@ -732,7 +762,19 @@ const updateFlyingState = () => {
         update.reset_update();
     } else {
         update.update_on_fly();
-        balanceTheRotation();
+        //    
+        if (angle * rotationDirection !== 0) {
+            const quaternion = new THREE.Quaternion().setFromAxisAngle(
+                new THREE.Vector3(1, 0, 0),
+                angle * rotationDirection
+            );
+            heliQuaternion.multiply(quaternion);
+            if (angle * rotationDirection < 0)
+                angle -= rotationSpeed;
+        }
+        console.log('----------------------------------')
+        console.log('angle')
+        console.log(angle)
         // updateRolls();
         heli.position.x = update.position.getX();
         heli.position.y = update.position.getY() - 7400;
@@ -742,18 +784,15 @@ const updateFlyingState = () => {
 };
 
 const balanceTheRotation = () => {
-    if (update.forces.right >= Math.PI / 36)
-        rollRight(false);
-    if (!balance && update.forces.right == 0) {
-        rollRight(false);
-        balance = true;
-    }
-    if (update.forces.left >= Math.PI / 36)
-        rollLeft(false);
-    if (!balance && update.forces.left == 0) {
-        rollLeft(false);
-        balance = true;
-    }
+    if (angle != 0)
+        rollRight(false, 0);
+
+    // if (update.forces.left >= Math.PI / 36)
+    //     rollLeft(false);
+    // if (!balance && update.forces.left == 0) {
+    //     rollLeft(false);
+    //     balance = true;
+    // }
 }
 
 const updateRolls = () => {
@@ -768,5 +807,18 @@ const updatePivotRotation = () => {
         pivotGroup.rotation.y += update.W;
     }
 };
+
+// Add GUI controllers and store them in the 'controllers' array
+lilGui.title("Helicopter Status");
+controllers.push(lilGui.add(myObject, "RotorSpeed"));
+controllers.push(lilGui.add(myObject, "AngleOfAttak"));
+controllers.push(lilGui.add(myObject, "Height"));
+controllers.push(lilGui.add(myObject, "ForwardSpeed"));
+controllers.push(lilGui.add(myObject, "RightSpeed"));
+controllers.push(lilGui.add(myObject, "UpSpeed"));
+controllers.push(lilGui.add(myObject, "Roll"));
+controllers.push(lilGui.add(myObject, "Yaw"));
+controllers.push(lilGui.add(myObject, "Pitch"));
+controllers.push(lilGui.add(myObject, "Status"));
 
 tick();

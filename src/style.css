@@ -1,115 +1,114 @@
 *,
 *::before,
 *::after {
-    box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 :root {
-    font-size: 16px;
-    font-family: Arial, Helvetica, sans-serif;
+  font-size: 16px;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 body {
-    margin: 0;
-    overflow: hidden;
-    min-height: 100vh;
+  margin: 0;
+  overflow: hidden;
+  min-height: 100vh;
 }
 
 
 .indicator {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background-color: rgba(255, 0, 0, 0.5);
-    padding: 10px;
-    border-radius: 5px;
-    color: white;
-    font-size: 14px;
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background-color: rgba(255, 0, 0, 0.5);
+  padding: 10px;
+  border-radius: 5px;
+  color: white;
+  font-size: 14px;
 }
 
 .value-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .value-label {
-    margin-right: 5px;
+  margin-right: 5px;
 }
 
 .display-value {
-    font-weight: bold;
+  font-weight: bold;
 }
 
 .lil-gui {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    background-color: rgba(0, 0, 0, 0.282);
-    border-radius: 100px;
-    width: 190px;
-    height: 190px;
-  }
-  
-  .lil-gui.root {
-    width: var(--width, 210px);
-    height: var(--height, 210px);
-    display: flex;
-    flex-direction: column;
-    border-radius: 5%;
-    padding-left: 0px;
-    align-items: center;
-    justify-content: center;
-    background-color: rgba(48, 94, 134, 0.581);
-    margin-left: 30px;
-    margin-bottom: 30px;
-    width: 150px;
-    height: 400px;
-  }
-  
-  .lil-gui input[type="text"],
-  .lil-gui input[type="number"] {
-    padding-left: 4px;
-    border: none;
-    outline: none;
-    background: rgb(39, 33, 33);
-    width: 50px;
-    color: white;
-    margin-left: 10px;
-    border-radius: 15px;
-  }
-  
-  .lil-gui .controller {
-    display: flex;
-    align-items: center;
-    font-weight: bold;
-    color:rgb(255, 255, 255);
-  }
-  
-  .lil-gui .controller > .name {
-    min-width: var(--name-width,20);
-    flex-shrink: 0;
-    white-space: nowrap;
-    padding-right: var(--spacing);
-    line-height: var(--widget-height, 2);
-    font-size: 14px;
-  }
-  
-  .lil-gui .controller .widget {
-    position: relative;
-    display: flex;
-    align-items: center;
-    width: 100%;
-    min-height: var(--widget-height);
-    border-radius: var(--widget-border-radius);
-  }
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  background-color: rgba(0, 0, 0, 0.282);
+  border-radius: 100px;
+  width: 190px;
+  height: 190px;
+}
 
-.lil-gui.root > .title {
-    color: rgb(255, 255, 255);
-    font-weight: bold;
-    border-width: 1px 0;
-    padding-bottom: 15px;
-  }
-  
-  
-  
+.lil-gui.root {
+  width: var(--width, 210px);
+  height: var(--height, 210px);
+  display: flex;
+  flex-direction: column;
+  border-radius: 5%;
+  padding-left: 1rem;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(48, 94, 134, 0.581);
+  margin-left: 30px;
+  margin-bottom: 30px;
+  width: 200px;
+  height: 350px;
+}
+
+.lil-gui input[type="text"],
+.lil-gui input[type="number"] {
+  padding-left: 4px;
+  border: none;
+  outline: none;
+  background: rgb(42, 47, 54);
+  width: 60px;
+  text-align: center;
+  color: white;
+  margin-left: calc(100% - 20px);
+  border-radius: 15px;
+}
+
+.lil-gui .controller {
+  display: flex;
+  align-items: center;
+  font-weight: bold;
+  margin-right: 40px;
+  color: rgb(255, 255, 255);
+}
+
+.lil-gui .controller>.name {
+  min-width: var(--name-width, 20);
+  flex-shrink: 0;
+  white-space: nowrap;
+  padding-right: var(--spacing);
+  line-height: var(--widget-height, 2);
+  font-size: 14px;
+}
+
+.lil-gui .controller .widget {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: var(--widget-height);
+  border-radius: var(--widget-border-radius);
+}
+
+.lil-gui.root>.title {
+  color: rgb(255, 255, 255);
+  font-weight: bold;
+  border-width: 1px 0;
+  padding-bottom: 15px;
+}
